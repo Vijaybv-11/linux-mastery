@@ -16,7 +16,9 @@ Run `npm test` with Node 22+ for command-engine and mission checks. Run `python3
 
 The terminal is an educational simulation, not an operating system. Supported syntax is documented in the in-app field guide. Different missions have independent workspaces; mission reset preserves earned XP. Advanced pipes, processes, services, and networking are outside this first chapter.
 
-Each mission includes a collapsible briefing from a fictional teammate, Maya, and a real-world use case. The `scenario` object on each lesson in `dist/lessons.js` holds its story, setting, and use case. These briefings describe a shared first-day narrative; each mission still starts with its own prepared practice filesystem.
+The layout and interactions follow GitMastery's UI: a sticky header with nav, field-guide button and XP chip; a hero with a command ticker; a player dashboard; a stage-based learning path; and a level workspace. The workspace has a milestone progress bar, a terminal panel, and a Challenge/Filesystem tabbed panel with objective checkboxes and collapsible hints. The playground puts the filesystem first, and the field guide is searchable. Linux's own palette, mascot, and copy are kept.
+
+Each mission includes a story briefing from a fictional teammate, Maya, and a real-world use case. The briefing opens as a modal the first time a mission is entered and can be replayed with "Show Story". The list of seen briefings is kept in the UI-only localStorage key `linux-mastery-story-seen`. The `scenario` object on each lesson in `dist/lessons.js` holds its story, setting, and use case. These briefings describe a shared first-day narrative; each mission still starts with its own prepared practice filesystem.
 
 Guest progress stays in browser localStorage. Signed-in users have separate progress saved to `.data/accounts.sqlite3`, outside the served `dist` directory. Signup offers an explicit choice to bring guest progress into the new account. Logging into an existing account loads that account's progress; logging out restores the separate guest workspace.
 

@@ -9,6 +9,12 @@ function readGuestProgress() {
 }
 let saved=readGuestProgress();
 let active=-2,session=null,historyIndex=0,draft='',toastTimer;
+// UI-only state: which story intros have been shown, whether the hints panel is open, and the active workbench tab.
+const STORY_SEEN='linux-mastery-story-seen';
+let storySeen=new Set();try{const value=JSON.parse(localStorage.getItem(STORY_SEEN));if(Array.isArray(value))storySeen=new Set(value);}catch{}
+let hintsOpen=false;
+const ICONS={user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
+function icon(name){const span=document.createElement('span');span.innerHTML=`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;return span.firstChild;}
 const xp=()=>saved.completed.reduce((sum,i)=>sum+lessons[i].xp,0);
 const nextLesson=()=>lessons.findIndex((_,i)=>!saved.completed.includes(i));
 function persist(){if(accounts.isSignedIn()){accounts.save();return;}try{localStorage.setItem(STORAGE,JSON.stringify(saved));}catch{toast('Browser storage is unavailable. Progress will last for this visit.');}}
@@ -18,12 +24,14 @@ function renderProgress(){
   $('#rank-title').textContent=count===10?'At home in the terminal':count>=5?'Curious explorer':'Terminal newcomer';
   $('#rank-description').textContent=count===10?'A whole new world is waiting at your prompt.':count>=5?'Look how far a little curiosity has taken you.':'Every expert started with a first command.';
   $('#continue-button').innerHTML=(count===10?'Play again':count?'Continue playing':'Start playing')+' <span>↗</span>';
+  $('#header-done').textContent=count+'/10';$('#ws-xp').textContent=xp();$('#ws-progress-text').textContent=count+'/10 missions ('+count*10+'%)';$('#ws-progress-fill').style.width=count*10+'%';$('#ws-progress').setAttribute('aria-valuenow',String(count));
   const groups=[
     {title:'Find your way',description:'Get your bearings. Learn to look around and move with confidence.',ids:[0,1,2],symbol:'⌖'},
     {title:'Make it yours',description:'Create folders, make files, and leave your first message.',ids:[3,4,5],symbol:'⊞'},
     {title:'Work with files',description:'Read, copy, rename, and clear a little space.',ids:[6,7,8,9],symbol:'⧉'}
   ];
   const next=nextLesson();$('#hud-level').textContent=next===-1?'✓':String(next+1).padStart(2,'0');
+  $('#resume-title').textContent=next===-1?'Path complete · Replay any mission':'Mission '+String(next+1).padStart(2,'0')+' · '+lessons[next].title;
   const map=$('#mission-map');map.replaceChildren();
   groups.forEach((group,stage)=>{
     const complete=group.ids.filter(i=>saved.completed.includes(i)).length;
@@ -31,7 +39,7 @@ function renderProgress(){
     const row=document.createElement('section');row.className='stage-row'+(current?' current-stage':'')+(complete===group.ids.length?' stage-cleared':'');
     const marker=document.createElement('span');marker.className='stage-marker';marker.setAttribute('aria-hidden','true');marker.textContent=complete===group.ids.length?'✓':group.symbol;
     const summary=document.createElement('div');summary.className='stage-summary';
-    const meta=document.createElement('div');meta.className='stage-meta';const ordinal=document.createElement('span');ordinal.textContent=String(stage+1).padStart(2,'0');meta.append(ordinal);if(current){const tag=document.createElement('span');tag.className='you-are-here';tag.textContent='YOU ARE HERE';meta.append(tag);}const count=document.createElement('span');count.textContent=complete+' / '+group.ids.length;meta.append(count);
+    const meta=document.createElement('div');meta.className='stage-meta';const ordinal=document.createElement('span');ordinal.textContent=String(stage+1).padStart(2,'0');meta.append(ordinal);if(current){const tag=document.createElement('span');tag.className='you-are-here';tag.textContent='YOU ARE HERE';meta.append(tag);}const count=document.createElement('span');count.className='stage-count';count.append(icon('user'),document.createTextNode(complete+'/'+group.ids.length));meta.append(count);
     const heading=document.createElement('h3');heading.textContent=group.title;const description=document.createElement('p');description.textContent=group.description;const progress=document.createElement('div');progress.className='stage-progress';progress.setAttribute('role','progressbar');progress.setAttribute('aria-label',group.title+' completion');progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax',String(group.ids.length));progress.setAttribute('aria-valuenow',String(complete));const fill=document.createElement('span');fill.style.width=(complete/group.ids.length*100)+'%';progress.append(fill);summary.append(meta,heading,description,progress);
     const levels=document.createElement('div');levels.className='stage-levels';
     group.ids.forEach(i=>{const done=saved.completed.includes(i);const button=document.createElement('button');button.className='mission-tile'+(done?' done':i===next?' current':'');button.textContent=String(i+1);button.setAttribute('aria-label',`Mission ${i+1}: ${lessons[i].title}${done?', completed':i===next?', up next':''}`);if(i===next)button.setAttribute('aria-current','step');button.title=lessons[i].title+' · '+lessons[i].xp+' XP';button.onclick=()=>navigate(i);if(done){const badge=document.createElement('span');badge.className='node-check';badge.setAttribute('aria-hidden','true');badge.textContent='✓';button.append(badge);}levels.append(button);});
@@ -54,22 +62,38 @@ function celebrate() {
 }
 function open(i){
   document.querySelectorAll('.celebration').forEach(burst=>burst.remove());
-  active=i;$('#home').hidden=i!==-2;$('#workspace').hidden=i===-2;document.body.classList.toggle('lesson-open',i!==-2);document.querySelectorAll('.nav-link').forEach(b=>b.classList.toggle('active',i===-1?b.dataset.action==='playground':b.dataset.action==='learn'));renderProgress();
-  if(i===-2){window.scrollTo(0,0);return;}
+  if(active!==i)hintsOpen=false;
+  active=i;$('#home').hidden=i!==-2;$('#workspace').hidden=i===-2;document.body.classList.toggle('lesson-open',i!==-2);document.body.classList.toggle('playground-mode',i===-1);
+  document.querySelectorAll('.nav-link').forEach(b=>{const on=i===-1?b.dataset.action==='playground':b.dataset.action==='learn';b.classList.toggle('active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});renderProgress();
+  if(i===-2){if($('#story-dialog').open)$('#story-dialog').close();window.scrollTo(0,0);return;}
   renderSteps();
   session=saved.sessions[String(i)];if(!validSession(session)){session=newSession(i);saved.sessions[String(i)]=session;}historyIndex=session.history.length;draft='';$('#command-input').value='';
   const l=lessons[i];
   const scenario=l?.scenario;
-  $('#mission-context').hidden=!scenario;
+  $('#story-button').hidden=!scenario;
   if(scenario){
-    $('#story-number').textContent=String(i+1).padStart(2,'0')+' / 10';
-    $('#story-title').textContent=scenario.title;
+    $('#story-number').textContent='Mission '+String(i+1).padStart(2,'0')+' / 10';
+    $('#story-title-text').textContent=scenario.title;
     $('#lesson-story').textContent=scenario.story;
     $('#scenario-setting').textContent=scenario.setting;
     $('#scenario-use').textContent=scenario.useCase;
+    $('#story-task').textContent=l.objective;
   }
   $('#workspace-mode').textContent=l?'MISSION '+String(i+1).padStart(2,'0')+' / 10':'FREE EXPLORATION';$('#lesson-category').textContent=l?'CHAPTER 01 · FIND YOUR FEET':'NO OBJECTIVES. ALL POSSIBILITY.';$('#lesson-title').textContent=l?.title||'Go where curiosity takes you.';$('#lesson-description').textContent=l?.description||'Your own little Linux neighborhood. Create something, read something, move things around. This space is yours.';$('#lesson-objective').textContent=l?.objective||'Explore at your own pace. Type help to see what’s possible, or open the field guide for a few ideas.';$('#lesson-concept').innerHTML=l?.concept||'<code>ls</code> is a good place to start. Try <code>cd Documents</code>, then <code>cat welcome.txt</code>. Your commands change the filesystem beside you.';$('#hint-area').hidden=!l;$('#lesson-xp').textContent=(l?.xp||0)+' XP';$('.lesson-reward').hidden=!l;
+  $('#objective-row').classList.toggle('free',!l);$('#concept-label').textContent=l?'The command:':'Ideas to try:';$('#tab-challenge-label').textContent=l?'Challenge':'Explore';$('#playground-toolbar').hidden=!!l;
+  selectTab(l?'challenge':'files');
   renderHint();renderLogs();renderShell();renderCompletion();persist();window.scrollTo(0,0);
+  // GitMastery-style story intro: open automatically the first time a mission is entered; replay via "Show Story".
+  if(scenario&&!storySeen.has(i)){storySeen.add(i);try{localStorage.setItem(STORY_SEEN,JSON.stringify([...storySeen]));}catch{}openStory();}
+  else if($('#story-dialog').open&&!scenario)$('#story-dialog').close();
+}
+function openStory(){const dialog=$('#story-dialog');if(!dialog.open)dialog.showModal();$('#story-start').focus();}
+function selectTab(name){
+  const challenge=name==='challenge';
+  $('#tab-challenge').classList.toggle('active',challenge);$('#tab-files').classList.toggle('active',!challenge);
+  $('#tab-challenge').setAttribute('aria-selected',String(challenge));$('#tab-files').setAttribute('aria-selected',String(!challenge));
+  $('#tab-challenge').tabIndex=challenge?0:-1;$('#tab-files').tabIndex=challenge?-1:0;
+  $('#panel-challenge').hidden=!challenge;$('#panel-files').hidden=challenge;
 }
 function renderLogs(){const output=$('#terminal-output');output.replaceChildren();for(const log of session.logs){const line=document.createElement('div');line.className='terminal-line '+log.type;if(log.type==='command'){const path=document.createElement('span');path.className='command-path';path.textContent=log.path;const prompt=document.createElement('span');prompt.className='command-prompt';prompt.textContent='❯';line.append(path,prompt,document.createTextNode(log.text));}else line.textContent=log.text;output.append(line);}output.scrollTop=output.scrollHeight;}
 function renderShell(){const {cwd,fs}=session.shell;$('#terminal-path').textContent=shortPath(cwd);$('#input-path').textContent=shortPath(cwd);$('#command-count').textContent=session.count+' command'+(session.count===1?'':'s')+' explored';const tree=$('#file-tree');tree.replaceChildren();const root=document.createElement('div');root.className='tree-root';root.textContent='/home';tree.append(root);
@@ -77,9 +101,26 @@ function renderShell(){const {cwd,fs}=session.shell;$('#terminal-path').textCont
   renderNode(HOME,0);$('#file-detail').replaceChildren();const label=document.createElement('span');label.textContent='LIVE VIEW';const note=document.createElement('p');note.textContent='Click a file to peek inside. Highlight shows your working directory.';$('#file-detail').append(label,note);
 }
 function inspectFile(path){const node=session.shell.fs[path];const detail=$('#file-detail');detail.replaceChildren();const label=document.createElement('span');label.textContent=node.type==='dir'?'DIRECTORY':'FILE';const title=document.createElement('p');title.textContent=shortPath(path);const mode=document.createElement('p');mode.textContent='Permissions: '+node.mode;detail.append(label,title,mode);const content=document.createElement('pre');content.textContent=node.type==='dir'?children(session.shell.fs,path).length+' items':node.content||'(empty file)';detail.append(content);}
-function renderHint(){const l=lessons[active];if(!l)return;$('#hint-text').hidden=!session.hints;$('#hint-text').textContent=l.hints[Math.max(0,session.hints-1)];$('#hint-button').textContent=session.hints===0?'✳ A little nudge':session.hints===1?'✳ Show an example':'✳ Example shown';$('#hint-button').disabled=session.hints>=l.hints.length;}
-function renderCompletion(){const lesson=lessons[active];$('#completion').hidden=!lesson||!session.cleared;if(!lesson)return;$('#completion-copy').textContent=lesson.success;$('#next-button').innerHTML=(active===9?'Back to your path':'Next mission')+' <span>→</span>';}
-$('#hint-button').onclick=()=>{if(!session)return;session.hints=Math.min(2,session.hints+1);renderHint();persist();};
+// GitMastery-style collapsible hints: the box reveals hints progressively (reuses session.hints, 0–2).
+function renderHint(){
+  const l=lessons[active];if(!l)return;
+  $('#hints-box').hidden=!hintsOpen;$('#hint-button').setAttribute('aria-expanded',String(hintsOpen));$('#hint-button-label').textContent=hintsOpen?'Hide Hints':'Show Hints';
+  const shown=Math.min(l.hints.length,Math.max(1,session.hints));const list=$('#hint-list');list.replaceChildren();
+  l.hints.slice(0,shown).forEach((text,n)=>{const item=document.createElement('li');const kind=document.createElement('span');kind.className='hint-kind';kind.textContent=n===0?'Nudge':'Example';item.append(kind,document.createTextNode(text));list.append(item);});
+  $('#hint-count').textContent=`Hint ${shown} of ${l.hints.length}`;$('#hint-next').disabled=shown>=l.hints.length;
+}
+function renderCompletion(){const lesson=lessons[active];const cleared=!!lesson&&session.cleared;$('#completion').hidden=!cleared;$('#objective-row').classList.toggle('done',cleared);$('#objective-state').textContent=lesson?(cleared?'Objective complete':'Objective not yet complete'):'';if(!lesson)return;$('#completion-copy').textContent=lesson.success;$('#next-button').innerHTML=(active===9?'Back to your path':'Next mission')+' <span>→</span>';}
+$('#hint-button').onclick=()=>{if(!session||!lessons[active])return;hintsOpen=!hintsOpen;if(hintsOpen&&session.hints===0){session.hints=1;persist();}renderHint();};
+$('#hint-next').onclick=()=>{const l=lessons[active];if(!session||!l)return;session.hints=Math.min(l.hints.length,Math.max(1,session.hints)+1);renderHint();persist();};
+$('#tab-challenge').onclick=()=>selectTab('challenge');$('#tab-files').onclick=()=>selectTab('files');
+document.querySelectorAll('.workbench-tabs [role=tab], [role=tablist] [role=tab]').forEach(tab=>tab.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();const toFiles=event.currentTarget.id==='tab-challenge';selectTab(toFiles?'files':'challenge');$(toFiles?'#tab-files':'#tab-challenge').focus();}));
+function closeStory(){const dialog=$('#story-dialog');if(dialog.open)dialog.close();if(active!==-2)$('#command-input').focus();}
+$('#story-button').onclick=openStory;['#story-close','#story-skip','#story-start'].forEach(id=>$(id).onclick=closeStory);
+$('#story-dialog').addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();closeStory();}});
+function closeOnBackdrop(dialog,close){dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();});}
+closeOnBackdrop($('#story-dialog'),closeStory);
+document.querySelectorAll('[data-reset]').forEach(button=>button.addEventListener('click',()=>$('#reset-button').click()));
+document.querySelectorAll('[data-scroll]').forEach(button=>button.addEventListener('click',()=>{const target=document.getElementById(button.dataset.scroll);if(target)target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}));
 $('#reset-button').onclick=()=>{if(active===-2)return;saved.sessions[String(active)]=newSession(active);open(active);toast('Fresh workspace. Your earned XP is safe.');$('#command-input').focus();};
 $('#next-button').onclick=()=>navigate(active===9?-2:active+1);
 $('#terminal-form').addEventListener('submit',event=>{event.preventDefault();const input=$('#command-input');const command=input.value.trim();if(!command)return;const before=shortPath(session.shell.cwd);const result=runCommand(session.shell,command);session.history.push(command);session.history=session.history.slice(-100);historyIndex=session.history.length;draft='';session.count++;session.shell=result.state;if(result.clear){session.logs=[];}else{session.logs.push({type:'command',path:before,text:command});if(result.output)session.logs.push({type:result.ok?'result':'error',text:result.output.replace(/\n$/,'')});}
@@ -97,11 +138,15 @@ $('#command-input').addEventListener('keydown',event=>{
     if(choices.length){event.preventDefault();if(choices.length===1)input.value=prefix+choices[0]+(choices[0].endsWith('/')?'':' ');else{session.logs.push({type:'info',text:choices.join('  ')});renderLogs();}}
   }
 });
-document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.action;if(action==='learn')navigate(-2);else if(action==='continue'){const next=nextLesson();navigate(next===-1?0:next);}else if(action==='playground')navigate(-1);else if(action==='reference')$('#guide-dialog').showModal();}));
+document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.action;if(action==='learn')navigate(-2);else if(action==='continue'){const next=nextLesson();navigate(next===-1?0:next);}else if(action==='playground')navigate(-1);else if(action==='reference'){const dialog=$('#guide-dialog');if(!dialog.open)dialog.showModal();$('#guide-search').focus();}}));
 $('.site-header .brand').addEventListener('click',event=>{event.preventDefault();navigate(-2);});$('.footer-brand').addEventListener('click',event=>{event.preventDefault();navigate(-2);});
-$('#close-guide').onclick=()=>$('#guide-dialog').close();$('#guide-dialog').addEventListener('click',event=>{if(event.target===$('#guide-dialog')){const rect=event.target.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)event.target.close();}});
+$('#close-guide').onclick=()=>$('#guide-dialog').close();closeOnBackdrop($('#guide-dialog'),()=>$('#guide-dialog').close());
 const guide=[['Get your bearings',[['pwd','Print the working directory'],['ls [-a] [-l] [path]','List files; -a includes hidden files, -l shows details'],['cd [path]','Change directory; cd .. goes up, cd ~ goes home'],['whoami','Print your current username']]],['Make yourself at home',[['mkdir [-p] path','Create a directory; -p creates missing parents'],['touch file','Create an empty file'],['cp source target','Copy a file'],['mv source target','Move or rename a file or directory'],['rm file','Remove a file'],['rmdir directory','Remove an empty directory']]],['Read, write, and explore',[['echo "text"','Print a message; -n omits the final newline'],['echo "text" > file','Write a message to a file, replacing its contents'],['echo "text" >> file','Append a message to a file'],['cat file','Print file contents'],['head [-n 5] file','Read the first lines of a file'],['tail [-n 5] file','Read the last lines of a file'],['grep [-i] pattern file','Find matching lines; -i ignores letter case'],['wc [-l] file','Count lines, words, bytes; -l shows only lines'],['find . -name "*.txt"','Find paths by name; * matches any characters'],['chmod 755 file','Change permissions; +x adds execute permission'],['clear','Clear terminal output'],['help','Show available commands']]]];
-for(const [title,rows] of guide){const group=document.createElement('section');group.className='guide-group';const heading=document.createElement('h3');heading.textContent=title;group.append(heading);for(const [cmd,meaning] of rows){const row=document.createElement('div');row.className='guide-row';const code=document.createElement('code');code.textContent=cmd;const description=document.createElement('span');description.textContent=meaning;row.append(code,description);group.append(row);}$('#guide-content').append(group);}
+for(const [title,rows] of guide){const group=document.createElement('section');group.className='guide-group';const heading=document.createElement('h3');heading.textContent=title;const list=document.createElement('div');list.className='guide-rows';group.append(heading,list);for(const [cmd,meaning] of rows){const row=document.createElement('div');row.className='guide-row';const code=document.createElement('code');code.textContent=cmd;const description=document.createElement('span');description.textContent=meaning;row.append(code,description);list.append(row);}$('#guide-content').append(group);}
+// GitMastery-style command search inside the field guide.
+function filterGuide(){const query=$('#guide-search').value.trim().toLowerCase();let visible=0;document.querySelectorAll('#guide-content .guide-group').forEach(group=>{let groupVisible=0;group.querySelectorAll('.guide-row').forEach(row=>{const match=!query||row.textContent.toLowerCase().includes(query);row.hidden=!match;if(match)groupVisible++;});group.hidden=!groupVisible;visible+=groupVisible;});$('#guide-empty').hidden=visible>0;}
+$('#guide-search').addEventListener('input',filterGuide);
+$('#guide-dialog').addEventListener('close',()=>{$('#guide-search').value='';filterGuide();});
 function route(){const match=location.hash.match(/^#mission-(\d+)$/);if(match&&Number(match[1])>=1&&Number(match[1])<=10)open(Number(match[1])-1);else if(location.hash==='#playground')open(-1);else open(-2);}
 const accounts=createAccounts({
   getProgress:()=>saved,
