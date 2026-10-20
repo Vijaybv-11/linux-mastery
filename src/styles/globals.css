@@ -1,0 +1,339 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans:
+        var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+
+    --font-display: var(--font-bungee), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-code: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Linux Mastery palette. Same token roles as GitMastery's arcade system, Linux colours:
+       orange = primary action / the prompt brand, grape = secondary surfaces & stages,
+       lime = success / cleared, cyan = focus & info, gold = XP & rewards, coral = errors. */
+    --color-lm-void: #140c22;
+    --color-lm-night: #1f1430;
+    --color-lm-deep: #2c1d38;
+    --color-lm-surface: #362342;
+    --color-lm-line: #594069;
+    --color-lm-line-hi: #7a5a8f;
+    --color-lm-orange: #ff9565;
+    --color-lm-orange-hi: #ffad86;
+    --color-lm-orange-edge: #a64f35;
+    --color-lm-grape: #64329a;
+    --color-lm-grape-hi: #8650b6;
+    --color-lm-grape-edge: #361852;
+    --color-lm-violet: #a989e8;
+    --color-lm-lime: #d2f78b;
+    --color-lm-lime-edge: #789846;
+    --color-lm-coral: #ff8f8f;
+    --color-lm-coral-edge: #a8474f;
+    --color-lm-cyan: #9ae1e6;
+    --color-lm-cyan-edge: #4f9aa0;
+    --color-lm-gold: #ffd477;
+    --color-lm-gold-edge: #b8903f;
+    --color-lm-ink: #fff3e5;
+    --color-lm-ink-soft: #e2d3ea;
+    --color-lm-ink-muted: #c4b4cf;
+    --color-lm-ink-dim: #a18cb3;
+
+    /* Semantic layer used by the shadcn-style primitives. */
+    --color-background: var(--color-lm-void);
+    --color-foreground: var(--color-lm-ink);
+    --color-card: var(--color-lm-night);
+    --color-card-foreground: var(--color-lm-ink);
+    --color-popover: var(--color-lm-night);
+    --color-popover-foreground: var(--color-lm-ink);
+    --color-primary: var(--color-lm-orange);
+    --color-primary-foreground: var(--color-lm-void);
+    --color-secondary: var(--color-lm-grape);
+    --color-secondary-foreground: var(--color-lm-ink);
+    --color-muted: var(--color-lm-deep);
+    --color-muted-foreground: var(--color-lm-ink-dim);
+    --color-accent: var(--color-lm-deep);
+    --color-accent-foreground: var(--color-lm-ink);
+    --color-destructive: var(--color-lm-coral);
+    --color-destructive-foreground: var(--color-lm-void);
+    --color-border: var(--color-lm-line);
+    --color-input: var(--color-lm-line);
+    --color-ring: var(--color-lm-cyan);
+
+    /* Semantic stacking order. Never write a bare z-index number in a component. */
+    --z-sticky: 30;
+    --z-dropdown: 40;
+    --z-overlay: 50;
+    --z-modal: 60;
+    --z-toast: 70;
+    --z-tooltip: 80;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+    --animate-accordion-down: accordion-down 0.2s ease-out;
+    --animate-accordion-up: accordion-up 0.2s ease-out;
+    --animate-marquee: lm-marquee 38s linear infinite;
+    --animate-caret: lm-caret 1.05s steps(1) infinite;
+    --animate-pop-in: lm-pop-in 0.35s var(--ease-out-expo);
+}
+
+@keyframes lm-marquee {
+    to {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+@keyframes lm-caret {
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes lm-pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+@keyframes accordion-down {
+    from {
+        height: 0;
+    }
+    to {
+        height: var(--radix-accordion-content-height);
+    }
+}
+
+@keyframes accordion-up {
+    from {
+        height: var(--radix-accordion-content-height);
+    }
+    to {
+        height: 0;
+    }
+}
+
+/* Chunky, pressable arcade buttons (GitMastery's btn-arcade). */
+@utility btn-arcade {
+    --btn-lift: 5px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3.25rem;
+    padding: 0 1.5rem;
+    border-radius: 1rem;
+    border: 2px solid var(--btn-edge);
+    background: var(--btn-face);
+    color: var(--btn-ink);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    box-shadow: 0 var(--btn-lift) 0 var(--btn-edge);
+    transform: translateY(0);
+    transition:
+        transform 160ms var(--ease-out-expo),
+        box-shadow 160ms var(--ease-out-expo),
+        filter 160ms var(--ease-out-expo);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 calc(var(--btn-lift) + 2px) 0 var(--btn-edge);
+    }
+    &:active {
+        transform: translateY(calc(var(--btn-lift) - 1px));
+        box-shadow: 0 1px 0 var(--btn-edge);
+    }
+    &:focus-visible {
+        outline: 3px solid var(--color-lm-cyan);
+        outline-offset: 4px;
+    }
+    &:disabled,
+    &[aria-disabled="true"] {
+        cursor: not-allowed;
+        filter: saturate(0.3) brightness(0.8);
+        transform: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: filter 120ms linear;
+        &:hover {
+            transform: none;
+            box-shadow: 0 var(--btn-lift) 0 var(--btn-edge);
+        }
+    }
+}
+
+@utility btn-arcade-orange {
+    --btn-face: var(--color-lm-orange);
+    --btn-edge: var(--color-lm-orange-edge);
+    --btn-ink: var(--color-lm-void);
+}
+@utility btn-arcade-lime {
+    --btn-face: var(--color-lm-lime);
+    --btn-edge: var(--color-lm-lime-edge);
+    --btn-ink: var(--color-lm-void);
+}
+@utility btn-arcade-grape {
+    --btn-face: var(--color-lm-grape);
+    --btn-edge: var(--color-lm-grape-edge);
+    --btn-ink: var(--color-lm-ink);
+}
+@utility btn-arcade-night {
+    --btn-face: var(--color-lm-night);
+    --btn-edge: var(--color-lm-line);
+    --btn-ink: var(--color-lm-ink);
+}
+@utility btn-arcade-sm {
+    --btn-lift: 4px;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: 0.85rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0;
+    gap: 0.5rem;
+}
+@utility btn-arcade-coral {
+    --btn-face: var(--color-lm-coral);
+    --btn-edge: var(--color-lm-coral-edge);
+    --btn-ink: var(--color-lm-void);
+}
+@utility btn-arcade-gold {
+    --btn-face: var(--color-lm-gold);
+    --btn-edge: var(--color-lm-gold-edge);
+    --btn-ink: var(--color-lm-void);
+}
+@utility btn-arcade-cyan {
+    --btn-face: var(--color-lm-cyan);
+    --btn-edge: var(--color-lm-cyan-edge);
+    --btn-ink: var(--color-lm-void);
+}
+
+/* The single raised plane: every panel, card and dialog uses this. */
+@utility lm-panel {
+    background: var(--color-lm-night);
+    border: 2px solid var(--color-lm-line);
+    border-radius: 1.4rem;
+    color: var(--color-lm-ink);
+}
+
+/* Inset regions inside a panel (toolbars, list rows, code blocks). */
+@utility lm-inset {
+    background: var(--color-lm-void);
+    border: 2px solid var(--color-lm-line);
+    border-radius: 1rem;
+}
+
+/* Form controls. */
+@utility lm-field {
+    width: 100%;
+    background: var(--color-lm-void);
+    border: 2px solid var(--color-lm-line);
+    border-radius: 0.85rem;
+    color: var(--color-lm-ink);
+    padding: 0.625rem 0.875rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    transition:
+        border-color 180ms var(--ease-out-expo),
+        background 180ms var(--ease-out-expo);
+
+    &::placeholder {
+        color: var(--color-lm-ink-dim);
+    }
+    &:hover:not(:disabled) {
+        border-color: var(--color-lm-grape-hi);
+    }
+    &:focus-visible {
+        outline: 3px solid var(--color-lm-cyan);
+        outline-offset: 2px;
+        border-color: var(--color-lm-cyan);
+    }
+    &:disabled,
+    &:read-only {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+}
+
+/* Small status pills. */
+@utility lm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* Scrollbars inside panels. */
+@utility lm-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-lm-line) transparent;
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: var(--color-lm-line);
+        border-radius: 9999px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--color-lm-grape-hi);
+        background-clip: content-box;
+    }
+}
+
+/* Concept copy in lessons is authored as small HTML snippets with <code>. */
+.lm-concept code {
+    font-family: var(--font-code);
+    font-size: 0.9em;
+    color: var(--color-lm-orange);
+    background: var(--color-lm-deep);
+    border: 1px solid var(--color-lm-line);
+    border-radius: 0.4rem;
+    padding: 0.05rem 0.35rem;
+}
+
+@layer base {
+    * {
+        border-color: var(--color-lm-line);
+    }
+    html {
+        color-scheme: dark;
+    }
+    body {
+        background: var(--color-lm-void);
+        color: var(--color-lm-ink);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+    }
+    :focus-visible {
+        outline: 3px solid var(--color-lm-cyan);
+        outline-offset: 2px;
+    }
+    ::selection {
+        background: var(--color-lm-orange);
+        color: var(--color-lm-void);
+    }
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
+}
