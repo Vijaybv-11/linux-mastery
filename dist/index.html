@@ -2,29 +2,237 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#21152b">
+  <meta name="theme-color" content="#140c22">
   <meta name="description" content="Get comfortable with Linux, one command at a time. Ten hands-on missions, a live filesystem, and room to experiment.">
   <title>Linux Mastery — Level up your Linux skills</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff9565'/%3E%3Ctext x='8' y='43' font-size='35' font-family='monospace' font-weight='bold' fill='%2321152b'%3E%3E_%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
-  <header class="site-header"><a class="brand" href="#" aria-label="Linux Mastery home"><span class="brand-icon">&gt;_</span><span>LINUX<span class="brand-light">MASTERY</span><span class="brand-dot">.</span></span></a><nav aria-label="Main navigation"><button class="nav-link active" data-action="learn">Learning path</button><button class="nav-link" data-action="playground">Playground <span>↗</span></button><button class="nav-link" data-action="reference">Field guide</button></nav><div class="header-progress"><span class="xp-icon">✦</span><strong id="header-xp">0 XP</strong></div><div class="account-controls"><button class="account-login" id="login-button"><span aria-hidden="true">↪</span> Log in</button><details id="account-details" hidden><summary><span class="account-avatar" id="account-avatar">E</span><span id="account-name"></span><span aria-hidden="true">⌄</span></summary><div class="account-popover"><strong id="account-full-name"></strong><span id="account-email"></span><span class="account-local">Local account · This computer</span><button id="logout-button">Log out <span>↗</span></button></div></details></div></header>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <!-- App shell: sticky HUD navbar (GitMastery Navbar structure, Linux branding) -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="Linux Mastery home"><span class="brand-icon" aria-hidden="true">&gt;_</span><span class="brand-word">LINUX<span class="brand-light">MASTERY</span></span></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-action="learn" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span class="nav-label">Home</span></button>
+        <button class="nav-link" data-action="playground"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span class="nav-label">Playground</span></button>
+      </nav>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <div class="nav-utils">
+        <button class="icon-btn" data-action="reference" aria-label="Open the field guide" title="Field guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></button>
+        <div class="purse-chip" title="Your progress"><span class="purse-item"><span class="purse-icon gold" aria-hidden="true">✦</span><strong id="header-xp">0 XP</strong></span><span class="purse-sep" aria-hidden="true"></span><span class="purse-item"><span class="purse-icon lime" aria-hidden="true">✓</span><strong id="header-done">0/10</strong></span></div>
+      </div>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <div class="account-controls">
+        <button class="account-login" id="login-button"><span aria-hidden="true">↪</span> Log in</button>
+        <details id="account-details" hidden><summary><span class="account-avatar" id="account-avatar">E</span><span id="account-name"></span><span aria-hidden="true">⌄</span></summary><div class="account-popover"><strong id="account-full-name"></strong><span id="account-email"></span><span class="account-local">Local account · This computer</span><button id="logout-button">Log out <span>↗</span></button></div></details>
+      </div>
+      <button class="btn btn-primary btn-sm header-cta" data-action="continue"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span class="cta-label">Start learning</span></button>
+    </div>
+  </header>
+
+  <div id="main-content">
   <main id="home">
+    <!-- Hero -->
     <section class="hero">
-      <div class="hero-copy"><div class="hero-badge"><span>✦</span> REAL COMMANDS. LITTLE ADVENTURES.</div><h1>Master Linux<br>through<br><span class="play-ticket">play<span class="play-cursor">_</span></span></h1><p>Learn real Linux commands through hands-on challenges. Follow the path, explore your filesystem, and level up every time something clicks.</p><div class="hero-actions"><button class="button primary" id="continue-button" data-action="continue">Let’s get started <span>↗</span></button><button class="text-button" data-action="playground">Try the playground <span>↗</span></button></div><div class="hero-notes"><span><i>✓</i> No installation</span><span><i>✓</i> Safe to experiment</span><span><i>✓</i> Learn at your pace</span></div></div>
-      <div class="hero-art" aria-label="Illustration of a Linux terminal and filesystem"><div class="orbit-label">YOUR ADVENTURE STARTS HERE ↙</div><div class="art-spark spark-one" aria-hidden="true">✳</div><div class="art-spark spark-two" aria-hidden="true">✦</div><div class="demo-terminal"><div class="demo-title"><span><i class="signal"></i> explorer@linux: ~</span><span>bash</span></div><div class="demo-output"><p><span class="prompt">❯</span> pwd</p><p class="muted">/home/explorer</p><p><span class="prompt">❯</span> mkdir possibilities</p><p><span class="prompt">❯</span> ls</p><p class="demo-folders">Documents/ &nbsp;Downloads/<br><span>possibilities/</span></p><p><span class="prompt">❯</span> <span class="demo-caret"></span></p></div><div class="demo-bottom"><span>~</span><span>the adventure starts here</span></div></div><div class="mascot-sticker" aria-hidden="true"><svg viewBox="0 0 150 165" fill="none"><path d="M39 74C19 83 12 112 20 119c7 6 17-4 26-17m66-28c20 9 28 38 19 45-7 6-17-4-26-17" fill="#2a1935" stroke="#fff1df" stroke-width="7" stroke-linejoin="round"/><path d="M32 106c0-22 9-31 10-52C43 28 54 13 76 13s35 16 35 41c1 20 10 32 10 52 0 27-17 44-45 44s-44-17-44-44Z" fill="#2a1935" stroke="#fff1df" stroke-width="7"/><path d="M48 106c0-23 11-39 28-39s29 16 29 39c0 20-11 32-29 32s-28-12-28-32Z" fill="#fff1df"/><ellipse cx="63" cy="52" rx="12" ry="17" fill="#fff1df"/><ellipse cx="89" cy="52" rx="12" ry="17" fill="#fff1df"/><ellipse cx="67" cy="54" rx="4" ry="7" fill="#2a1935"/><ellipse cx="85" cy="54" rx="4" ry="7" fill="#2a1935"/><path d="m60 71 16-8 16 8-16 11-16-11Z" fill="#ff9565" stroke="#2a1935" stroke-width="3" stroke-linejoin="round"/><path d="m48 137-24 8c-8 3-7 13 2 13h37c6 0 8-6 4-10l-9-10c-3-3-6-3-10-1Zm56 0 24 8c8 3 7 13-2 13H89c-6 0-8-6-4-10l9-10c3-3 6-3 10-1Z" fill="#ff9565" stroke="#fff1df" stroke-width="5" stroke-linejoin="round"/><rect x="56" y="99" width="41" height="24" rx="5" fill="#7952a3"/><path d="m64 106 5 5-5 5m12 0h11" stroke="#fff1df" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>LET’S DO THIS.</span></div><div class="safe-sticker"><span>✓</span><div><strong>FIRST COMMAND?</strong><br>You’ve got this.</div><b>+50 XP</b></div><svg class="art-arrow" width="96" height="66" viewBox="0 0 96 66" fill="none" aria-hidden="true"><path d="M4 7c10 55 40 55 78 19M63 24l24-5-4 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1>Master Linux<br>through<span class="play-ticket">play<span class="play-cursor">_</span></span></h1>
+          <p>Learn real Linux commands through hands-on challenges. Follow the path, explore your filesystem, and level up every time something clicks.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-hero" id="continue-button" data-action="continue">Start playing <span>↗</span></button>
+            <button class="btn btn-secondary btn-hero" data-action="reference"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Field guide</button>
+          </div>
+          <div class="hero-quiet">
+            <button class="btn btn-quiet" data-scroll="journey"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Difficulty <span class="chip chip-grape">Beginner</span></button>
+            <button class="btn btn-quiet" data-action="playground"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg>Playground</button>
+            <button class="btn btn-quiet" data-scroll="player-panel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Your progress</button>
+          </div>
+          <div class="hero-notes"><span><i>✓</i> No installation</span><span><i>✓</i> Safe to experiment</span><span><i>✓</i> Learn at your pace</span></div>
+        </div>
+        <div class="hero-art" aria-label="Illustration of a Linux terminal and filesystem">
+          <div class="demo-terminal">
+            <div class="demo-title"><span><i class="signal"></i> ~/your-first-adventure</span><span>bash</span></div>
+            <div class="demo-output"><p><span class="prompt">$</span> pwd</p><p class="muted">/home/explorer</p><p><span class="prompt">$</span> mkdir possibilities</p><p><span class="prompt">$</span> ls</p><p class="demo-folders">Documents/ &nbsp;Downloads/ &nbsp;<span>possibilities/</span></p><p><span class="prompt">$</span> <span class="demo-caret"></span></p></div>
+            <div class="demo-tree" aria-hidden="true">
+              <div class="tree-node root">~</div>
+              <div class="tree-branch"><span class="tree-node">Documents/</span><span class="tree-node">Downloads/</span><span class="tree-node fresh">possibilities/</span></div>
+              <span class="xp-sticker">+50 XP</span>
+            </div>
+          </div>
+          <div class="mascot-sticker" aria-hidden="true"><svg viewBox="0 0 150 165" fill="none"><path d="M39 74C19 83 12 112 20 119c7 6 17-4 26-17m66-28c20 9 28 38 19 45-7 6-17-4-26-17" fill="#2a1935" stroke="#fff1df" stroke-width="7" stroke-linejoin="round"/><path d="M32 106c0-22 9-31 10-52C43 28 54 13 76 13s35 16 35 41c1 20 10 32 10 52 0 27-17 44-45 44s-44-17-44-44Z" fill="#2a1935" stroke="#fff1df" stroke-width="7"/><path d="M48 106c0-23 11-39 28-39s29 16 29 39c0 20-11 32-29 32s-28-12-28-32Z" fill="#fff1df"/><ellipse cx="63" cy="52" rx="12" ry="17" fill="#fff1df"/><ellipse cx="89" cy="52" rx="12" ry="17" fill="#fff1df"/><ellipse cx="67" cy="54" rx="4" ry="7" fill="#2a1935"/><ellipse cx="85" cy="54" rx="4" ry="7" fill="#2a1935"/><path d="m60 71 16-8 16 8-16 11-16-11Z" fill="#ff9565" stroke="#2a1935" stroke-width="3" stroke-linejoin="round"/><path d="m48 137-24 8c-8 3-7 13 2 13h37c6 0 8-6 4-10l-9-10c-3-3-6-3-10-1Zm56 0 24 8c8 3 7 13-2 13H89c-6 0-8-6-4-10l9-10c3-3 6-3 10-1Z" fill="#ff9565" stroke="#fff1df" stroke-width="5" stroke-linejoin="round"/><rect x="56" y="99" width="41" height="24" rx="5" fill="#7952a3"/><path d="m64 106 5 5-5 5m12 0h11" stroke="#fff1df" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>LET’S DO THIS.</span></div>
+        </div>
+      </div>
     </section>
-    <div class="command-ticker" aria-hidden="true"><span>pwd <i>✦</i> ls -la <i>✦</i> cd ~/possibilities <i>✦</i> mkdir something-cool <i>✦</i> cat curiosity.txt <i>✦</i> chmod +x you <i>✦</i> hello, linux <i>✦</i></span></div>
-    <section class="player-panel" aria-label="Your learning progress"><div class="player-hud"><div class="hud-stat"><span class="hud-icon gold">✦</span><div><small>Points</small><strong id="total-xp">0</strong></div></div><div class="hud-stat"><span class="hud-icon lime">✓</span><div><small>Completed</small><strong id="completed-count">0<span>/10</span></strong></div></div><div class="hud-stat"><span class="hud-icon coral">⚑</span><div><small>Next mission</small><strong id="hud-level">01</strong></div></div><div class="hud-stat hud-rank"><span class="hud-icon cyan">↳</span><div><small>Your rank</small><strong id="rank-title">Terminal newcomer</strong><span id="rank-description" hidden></span></div></div><button class="button primary hud-continue" data-action="continue">▶ Continue</button></div><div class="save-line"><p class="local-note"><span id="save-status">Guest progress is saved in this browser.</span> <button id="save-login">Log in to keep it with your account ↗</button></p><span id="progress-percent">0%</span></div><div class="progress-track hud-track"><span id="progress-fill"></span></div></section>
-    <div class="path-zone"><section class="journey" id="journey"><div class="section-heading"><div><h2>Your beginner<br>learning path<span class="path-leaf" aria-hidden="true">✳</span></h2><p>Start with a prompt. Leave with a superpower.</p></div><span class="pill"><span>✦</span> BEGINNER · 10 MISSIONS</span></div><div class="path-caption"><span id="chapter-count">0 / 10 complete</span><span>Choose any level to practise · Your next level is highlighted</span></div><div class="mission-map" id="mission-map"></div><div class="path-next"><span>04</span><div><h3>Connect the dots</h3><p>Pipes, searching, and permissions. Your next chapter is on the way.</p></div><span class="coming">COMING NEXT</span></div></section></div>
-    <section class="game-features"><h2>Learn by doing<span>.</span></h2><article class="feature-row"><div class="feature-visual terminal-mini" aria-hidden="true"><span>~/your-first-adventure</span><p><b>❯</b> mkdir possibilities</p><p><b>❯</b> cd possibilities</p><p><b>❯</b> echo "I made this" &gt; hello.txt</p><p class="feature-success">✓ Small command. Big possibility.</p></div><div class="feature-copy"><h3>A terminal.<br>A little courage.</h3><p>Type a command and see what changes. Your files, folders, and confidence grow together. Make a mistake? Reset and have another go.</p><button class="text-button feature-button" data-action="playground">⌘ Open the playground <span>→</span></button></div></article><article class="feature-row reversed"><div class="feature-copy"><h3>A nudge when<br>you need one.</h3><p>Small missions, useful hints, and a field guide right beside you. Build the skills you’ll actually use, one little win at a time.</p><button class="text-button feature-button" data-action="reference">▤ Open the field guide <span>→</span></button></div><div class="feature-visual achievement-visual" aria-hidden="true"><div><span>⌖</span><strong>Find your feet</strong><small>Navigation unlocked</small></div><div><span>⧉</span><strong>Make it yours</strong><small>Files & folders</small></div><div><span>★</span><strong>Keep exploring</strong><small>+800 XP to discover</small></div></div></article></section>
-    <section class="closing"><span class="closing-mark" aria-hidden="true">&gt;_</span><div><h2>Less overthinking.<br>More <span>“I did that.”</span></h2><p>No setup. No pressure. Just you and the prompt.</p></div><button class="button primary" data-action="continue">Let’s play Linux <span>→</span></button></section>
+
+    <!-- Marquee ticker -->
+    <div class="command-ticker" aria-hidden="true"><div class="ticker-track"><span>pwd <i>★</i> ls -la <i>★</i> cd ~/possibilities <i>★</i> mkdir something-cool <i>★</i> cat curiosity.txt <i>★</i> chmod +x you <i>★</i> hello, linux <i>★</i></span><span>pwd <i>★</i> ls -la <i>★</i> cd ~/possibilities <i>★</i> mkdir something-cool <i>★</i> cat curiosity.txt <i>★</i> chmod +x you <i>★</i> hello, linux <i>★</i></span></div></div>
+
+    <!-- Player dashboard: stat strip + jump back in -->
+    <section class="player-panel" id="player-panel" aria-label="Your learning progress">
+      <div class="player-hud">
+        <div class="hud-stat"><span class="hud-icon gold">✦</span><div><small>Points</small><strong id="total-xp">0</strong></div></div>
+        <div class="hud-stat"><span class="hud-icon lime">✓</span><div><small>Completed</small><strong id="completed-count">0<span>/10</span></strong></div></div>
+        <div class="hud-stat"><span class="hud-icon coral">⚑</span><div><small>Next mission</small><strong id="hud-level">01</strong></div></div>
+        <div class="hud-stat hud-rank"><span class="hud-icon cyan">↳</span><div><small>Your rank</small><strong id="rank-title">Terminal newcomer</strong><span id="rank-description" hidden></span></div></div>
+      </div>
+      <div class="resume-card">
+        <div class="resume-copy">
+          <span class="resume-kicker">Jump back in</span>
+          <h2 id="resume-title">Mission 01 · Where am I?</h2>
+          <div class="save-line"><p class="local-note"><span id="save-status">Guest progress is saved in this browser.</span> <button id="save-login">Log in to keep it with your account ↗</button></p></div>
+          <div class="bar" aria-hidden="true"><span id="progress-fill"></span></div>
+          <span class="resume-percent"><span id="progress-percent">0%</span> of the beginner path</span>
+        </div>
+        <button class="btn btn-primary hud-continue" data-action="continue"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Continue</button>
+      </div>
+    </section>
+
+    <!-- Learning path: drenched violet section with stage lane -->
+    <div class="path-zone">
+      <section class="journey" id="journey">
+        <div class="section-heading">
+          <div><h2>Your beginner<br>learning path<span class="path-leaf" aria-hidden="true">✳</span></h2><p>Start with a prompt. Leave with a superpower. · <span id="chapter-count">0 / 10 complete</span></p></div>
+          <span class="difficulty-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Difficulty <span class="chip chip-grape">Beginner</span></span>
+        </div>
+        <div class="stage-lane">
+          <div class="mission-map" id="mission-map"></div>
+          <section class="stage-row stage-locked" aria-label="Chapter 04, coming next">
+            <span class="stage-marker" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+            <div class="stage-summary"><div class="stage-meta"><span>04</span><span class="coming">COMING NEXT</span></div><h3>Connect the dots</h3><p>Pipes, searching, and permissions. Your next chapter is on the way.</p><div class="stage-progress"><span style="width:0"></span></div></div>
+            <div class="stage-levels" aria-hidden="true"><span class="mission-tile locked"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span class="mission-tile locked"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span class="mission-tile locked"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
+          </section>
+        </div>
+        <p class="path-caption">Choose any level to practise · Your next level is highlighted</p>
+      </section>
+    </div>
+
+    <!-- Feature rows -->
+    <section class="game-features">
+      <h2>Learn by doing<span>.</span></h2>
+      <article class="feature-row">
+        <div class="feature-visual terminal-mini" aria-hidden="true"><span>~/your-first-adventure</span><p><b>$</b> mkdir possibilities</p><p><b>$</b> cd possibilities</p><p><b>$</b> echo "I made this" &gt; hello.txt</p><p class="feature-success">✓ Small command. Big possibility.</p></div>
+        <div class="feature-copy"><h3>A terminal.<br>A little courage.</h3><p>Type a command and see what changes. Your files, folders, and confidence grow together. Make a mistake? Reset and have another go.</p><button class="btn btn-outline" data-action="playground"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg>Open the playground</button></div>
+      </article>
+      <article class="feature-row reversed">
+        <div class="feature-copy"><h3>A nudge when<br>you need one.</h3><p>Small missions, useful hints, and a field guide right beside you. Build the skills you’ll actually use, one little win at a time.</p><button class="btn btn-outline" data-action="reference"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Open the field guide</button></div>
+        <div class="feature-visual achievement-visual" aria-hidden="true"><div><span>⌖</span><strong>Find your feet</strong><small>Navigation unlocked</small></div><div><span>⧉</span><strong>Make it yours</strong><small>Files &amp; folders</small></div><div><span>★</span><strong>Keep exploring</strong><small>+800 XP to discover</small></div></div>
+      </article>
+    </section>
+
+    <section class="closing"><span class="closing-mark" aria-hidden="true">&gt;_</span><div><h2>Less overthinking.<br>More <span>“I did that.”</span></h2><p>No setup. No pressure. Just you and the prompt.</p></div><button class="btn btn-primary btn-hero" data-action="continue">Let’s play Linux <span>→</span></button></section>
   </main>
-  <main id="workspace" hidden><div class="workspace-top"><button class="text-button" data-action="learn">← Back to the path</button><span id="workspace-mode">MISSION 01 / 10</span><button class="text-button" data-action="reference">Field guide <span>↗</span></button></div><div class="lesson-steps" id="lesson-steps" aria-label="Mission navigation"></div><details class="mission-context" id="mission-context" open hidden><summary><span class="story-avatar" aria-hidden="true">M</span><span class="story-sender"><strong>Your first Linux shift</strong><small>Maya · Your teammate</small></span><span class="story-number" id="story-number"></span><span class="story-chevron" aria-hidden="true">⌄</span></summary><div class="briefing-content"><section class="story-message" aria-labelledby="story-title"><h2 id="story-title"></h2><p id="lesson-story"></p></section><aside class="story-usecase"><span class="context-label">IN THE REAL WORLD</span><h3 id="scenario-setting"></h3><p id="scenario-use"></p></aside></div></details><div class="workspace-grid"><section class="mission-brief"><div class="eyebrow small" id="lesson-category">FIND YOUR FEET</div><h1 id="lesson-title"></h1><p class="lesson-intro" id="lesson-description"></p><div class="objective"><span>YOUR MISSION</span><p id="lesson-objective"></p></div><div class="lesson-concept" id="lesson-concept"></div><div id="hint-area"><button class="hint-button" id="hint-button">✳ A little nudge</button><p id="hint-text" hidden></p></div><div class="lesson-reward">✦ <strong id="lesson-xp">50 XP</strong><span>Room to experiment. No penalty for mistakes.</span></div><div id="completion" hidden role="status"><div class="complete-banner"><span class="complete-icon">★</span><span>MISSION CLEARED</span></div><h2>Look at you go!</h2><p id="completion-copy"></p><button class="button primary" id="next-button">Next mission <span>→</span></button></div></section><section class="terminal-panel" aria-label="Interactive Linux terminal"><div class="terminal-title"><span><i class="signal"></i> explorer@linux <span class="terminal-separator">/</span> <span id="terminal-path">~</span></span><button class="icon-button" id="reset-button" aria-label="Reset this workspace" title="Reset workspace">↶</button></div><div class="terminal-output" id="terminal-output" role="log" aria-label="Terminal output" aria-live="polite"></div><form id="terminal-form" autocomplete="off"><label for="command-input"><span id="input-path">~</span><span class="prompt">❯</span></label><input id="command-input" name="command" aria-label="Linux command" placeholder="Type a command…" spellcheck="false" autocapitalize="off" autocomplete="off"><button type="submit" aria-label="Run command">↵</button></form><div class="terminal-status"><span><i class="status-dot"></i> Browser sandbox</span><span>↑↓ history <span class="status-divider">·</span> Tab complete</span></div></section><aside class="filesystem"><div class="filetree-title"><span>YOUR FILESYSTEM</span><span>↳</span></div><div id="file-tree"></div><div class="file-detail" id="file-detail"><span>LIVE VIEW</span><p>Watch your files change as you work.</p></div><p class="filesystem-note">A practice filesystem.<br>Your computer’s files stay untouched.</p></aside></div><div class="workspace-bottom"><span>✦ Practice makes the prompt feel like home.</span><span id="command-count">0 commands explored</span></div></main>
-  <footer><a class="brand footer-brand" href="#"><span class="brand-icon">&gt;_</span><span>linux<span class="brand-light">mastery</span><span class="brand-dot">.</span></span></a><span>Made for the wonderfully curious.</span><button class="text-button" data-action="reference">Keep a field guide handy ↗</button></footer>
-  <dialog id="guide-dialog"><div class="dialog-header"><div><div class="eyebrow small">A FRIEND BESIDE THE PROMPT</div><h2>Your field guide<span>.</span></h2></div><button class="icon-button" id="close-guide" aria-label="Close field guide">×</button></div><p class="guide-intro">The commands available in your practice terminal. Paths can be absolute or relative; quote names that contain spaces.</p><div id="guide-content"></div><div class="guide-note">This is a focused learning shell. Advanced shell syntax, pipes, processes, and networking come in future chapters.</div></dialog>
+
+  <!-- Level workspace: header + progress + two-panel workbench (terminal | challenge/filesystem) -->
+  <main id="workspace" hidden>
+    <div class="level-head">
+      <div class="level-titles">
+        <p class="level-kicker"><span id="workspace-mode">MISSION 01 / 10</span> <span aria-hidden="true">·</span> <span id="lesson-category">FIND YOUR FEET</span></p>
+        <h1 id="lesson-title"></h1>
+      </div>
+      <div class="level-tools">
+        <div class="playground-toolbar" id="playground-toolbar" hidden>
+          <button class="btn btn-outline btn-sm" data-action="reference"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Field guide</button>
+          <button class="btn btn-outline btn-sm" data-reset><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>Reset</button>
+          <button class="btn btn-secondary btn-sm" data-action="continue"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Missions</button>
+        </div>
+        <div class="steps-wrap" id="steps-wrap"><span class="steps-label">Missions</span><div class="lesson-steps" id="lesson-steps" aria-label="Mission navigation"></div></div>
+      </div>
+    </div>
+
+    <div class="level-progress" aria-label="Path progress">
+      <div class="progress-head"><strong>Progress</strong><span class="progress-meta"><span id="ws-progress-text">0/10 missions (0%)</span><span class="coin-chip"><span aria-hidden="true">✦</span> <span id="ws-xp">0</span></span></span></div>
+      <div class="milestone-bar" role="progressbar" aria-label="Beginner path completion" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="ws-progress"><span class="milestone-fill" id="ws-progress-fill"></span><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i></div>
+      <div class="milestone-labels" aria-hidden="true"><span style="left:25%">25%</span><span style="left:50%">50%</span><span style="left:75%">75%</span><span style="left:100%">100%</span></div>
+    </div>
+
+    <div class="workbench" id="workbench">
+      <section class="terminal-panel" aria-label="Interactive Linux terminal">
+        <div class="terminal-title"><span class="terminal-path"><i class="signal"></i> explorer@linux:<span id="terminal-path">~</span></span><span class="terminal-actions"><button class="icon-btn ghost" data-action="reference" aria-label="Open the field guide" title="Field guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></button><button class="icon-btn ghost" id="reset-button" aria-label="Reset this workspace" title="Reset workspace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button></span></div>
+        <div class="terminal-output" id="terminal-output" role="log" aria-label="Terminal output" aria-live="polite"></div>
+        <div class="terminal-status"><span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <span id="input-path">~</span> <span class="status-divider">·</span> <span id="command-count">0 commands explored</span></span><span>↑↓ history <span class="status-divider">·</span> Tab complete</span></div>
+        <form id="terminal-form" autocomplete="off"><label for="command-input"><span class="prompt">$</span><span class="sr-only">Linux command</span></label><input id="command-input" name="command" aria-label="Linux command" placeholder="Enter a command…" spellcheck="false" autocapitalize="off" autocomplete="off"><button type="submit" aria-label="Run command"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4zM22 2 11 13"/></svg></button></form>
+      </section>
+
+      <section class="challenge-panel" aria-label="Mission details">
+        <div class="panel-top">
+          <div class="tabs" role="tablist" aria-label="Mission panels">
+            <button class="tab active" role="tab" id="tab-challenge" aria-selected="true" aria-controls="panel-challenge"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span id="tab-challenge-label">Challenge</span></button>
+            <button class="tab" role="tab" id="tab-files" aria-selected="false" aria-controls="panel-files" tabindex="-1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Filesystem</button>
+          </div>
+          <button class="icon-btn ghost" data-action="reference" aria-label="Open the field guide" title="Field guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></button>
+        </div>
+
+        <div class="tab-panel" id="panel-challenge" role="tabpanel" aria-labelledby="tab-challenge">
+          <p class="lesson-intro" id="lesson-description"></p>
+          <h2 class="panel-label">Objectives:</h2>
+          <div class="objective-row" id="objective-row"><span class="objective-check" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><p id="lesson-objective"></p><span class="sr-only" id="objective-state"></span></div>
+          <div class="challenge-actions" id="hint-area">
+            <button class="btn btn-outline" id="hint-button" aria-expanded="false" aria-controls="hints-box"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg><span id="hint-button-label">Show Hints</span></button>
+            <button class="btn btn-outline" id="story-button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Show Story</button>
+          </div>
+          <div class="hints-box" id="hints-box" hidden>
+            <div class="hints-head"><strong><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg> Hints</strong><span id="hint-count" aria-live="polite">Hint 1 of 2</span></div>
+            <ul class="hint-list" id="hint-list"></ul>
+            <button class="btn btn-ghost btn-sm" id="hint-next">✳ Show an example</button>
+          </div>
+          <div id="completion" hidden role="status"><div class="complete-banner"><span class="complete-icon">★</span><span>MISSION CLEARED</span></div><h2>Look at you go!</h2><p id="completion-copy"></p><button class="btn btn-primary" id="next-button">Next mission <span>→</span></button></div>
+          <h2 class="panel-label" id="concept-label">The command:</h2>
+          <div class="lesson-concept" id="lesson-concept"></div>
+          <div class="lesson-reward"><span class="coin-chip">✦ <strong id="lesson-xp">50 XP</strong></span><span>Room to experiment. No penalty for mistakes.</span></div>
+        </div>
+
+        <div class="tab-panel filesystem" id="panel-files" role="tabpanel" aria-labelledby="tab-files" hidden>
+          <div class="panel-label-row"><h2 class="panel-label">Your filesystem:</h2><span class="live-chip"><i class="signal"></i> Live</span></div>
+          <div class="inset tree-inset" id="file-tree"></div>
+          <div class="file-detail inset" id="file-detail"><span>LIVE VIEW</span><p>Watch your files change as you work.</p></div>
+          <p class="filesystem-note">A practice filesystem. Your computer’s files stay untouched.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <a class="brand footer-brand" href="#"><span class="brand-icon" aria-hidden="true">&gt;_</span><span class="brand-word">LINUX<span class="brand-light">MASTERY</span></span></a>
+      <span>Made for the wonderfully curious.</span>
+      <button class="btn btn-ghost btn-sm" data-action="reference"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>Keep a field guide handy</button>
+    </div>
+  </footer>
+
+  <!-- Story modal (GitMastery StoryDialog structure) -->
+  <dialog id="story-dialog" class="story-dialog" aria-labelledby="story-title">
+    <div class="story-head">
+      <h2 id="story-title"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg><span id="story-title-text"></span></h2>
+      <span class="chip chip-outline" id="story-number"></span>
+      <button class="icon-btn ghost" id="story-close" aria-label="Close story"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="story-body">
+      <div class="story-sender"><span class="story-avatar" aria-hidden="true">M</span><span><strong>Maya</strong><small>Your teammate · Your first Linux shift</small></span></div>
+      <p id="lesson-story"></p>
+      <div class="inset story-inset"><strong>Real-World Context</strong><h3 id="scenario-setting"></h3><p id="scenario-use"></p></div>
+      <div class="inset story-inset task"><strong>Your Task</strong><p id="story-task"></p></div>
+    </div>
+    <div class="story-foot"><button class="btn btn-ghost btn-sm" id="story-skip">Skip story</button><button class="btn btn-primary" id="story-start">Start mission <kbd>Ctrl+Enter</kbd></button></div>
+  </dialog>
+
+  <!-- Field guide -->
+  <dialog id="guide-dialog" aria-labelledby="guide-title">
+    <div class="dialog-header"><div><div class="eyebrow small">A FRIEND BESIDE THE PROMPT</div><h2 id="guide-title">Your field guide<span>.</span></h2></div><button class="icon-btn ghost" id="close-guide" aria-label="Close field guide"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <label class="guide-search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sr-only">Search commands</span><input id="guide-search" type="search" placeholder="Search commands… (try “copy” or “ls”)" autocomplete="off" spellcheck="false"></label>
+    <div class="guide-scroll">
+      <p class="guide-intro">The commands available in your practice terminal. Paths can be absolute or relative; quote names that contain spaces.</p>
+      <div id="guide-content"></div>
+      <p class="guide-empty" id="guide-empty" hidden>No commands match that search.</p>
+      <div class="guide-note">This is a focused learning shell. Advanced shell syntax, pipes, processes, and networking come in future chapters.</div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" hidden></div>
-  <dialog id="auth-dialog" aria-labelledby="auth-title" aria-describedby="auth-recovery-warning"><div class="auth-header"><span class="brand-icon" aria-hidden="true">&gt;_</span><button class="icon-button" id="auth-close" aria-label="Close login">×</button></div><div class="auth-heading"><span class="auth-kicker">YOUR NEXT CHAPTER</span><h2 id="auth-title">Welcome back<span>.</span></h2><p id="auth-description">Your next adventure is right where you left it.</p></div><div class="auth-recovery-warning" id="auth-recovery-warning" role="note"><span aria-hidden="true">!</span><div><strong>No password recovery.</strong><p>If you forget your password, you won’t be able to sign back in to this account. Keep it in a password manager.</p></div></div><form id="auth-form"><div class="auth-field" id="auth-name-field" hidden><label for="auth-name">Display name</label><input id="auth-name" name="name" autocomplete="nickname" maxlength="40" placeholder="What should we call you?"></div><div class="auth-field"><label for="auth-email">Email</label><input id="auth-email" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="auth-field"><label for="auth-password">Password</label><div class="password-wrap"><input id="auth-password" name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Your password"><button type="button" id="password-toggle" aria-label="Show password" aria-pressed="false">Show</button></div><small id="password-help" hidden>At least 10 characters. A few words work well.</small></div><label class="auth-import" id="auth-import-row" hidden><input type="checkbox" id="auth-import" checked><span>Bring my guest progress into this account</span></label><p id="auth-error" class="auth-error" role="alert" hidden></p><button class="button primary auth-submit" id="auth-submit" type="submit">Log in <span>→</span></button></form><p class="auth-switch"><span id="auth-switch-copy">New around here?</span> <button id="auth-switch">Create an account</button></p><p class="auth-local-note">Local account · Saved on this computer.</p></dialog>
-  <script type="module" src="app.js?v=4"></script>
+
+  <dialog id="auth-dialog" aria-labelledby="auth-title" aria-describedby="auth-recovery-warning"><div class="auth-header"><span class="brand-icon" aria-hidden="true">&gt;_</span><button class="icon-btn ghost" id="auth-close" aria-label="Close login"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div class="auth-heading"><span class="auth-kicker">YOUR NEXT CHAPTER</span><h2 id="auth-title">Welcome back<span>.</span></h2><p id="auth-description">Your next adventure is right where you left it.</p></div><div class="auth-recovery-warning" id="auth-recovery-warning" role="note"><span aria-hidden="true">!</span><div><strong>No password recovery.</strong><p>If you forget your password, you won’t be able to sign back in to this account. Keep it in a password manager.</p></div></div><form id="auth-form"><div class="auth-field" id="auth-name-field" hidden><label for="auth-name">Display name</label><input id="auth-name" name="name" autocomplete="nickname" maxlength="40" placeholder="What should we call you?"></div><div class="auth-field"><label for="auth-email">Email</label><input id="auth-email" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="auth-field"><label for="auth-password">Password</label><div class="password-wrap"><input id="auth-password" name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Your password"><button type="button" id="password-toggle" aria-label="Show password" aria-pressed="false">Show</button></div><small id="password-help" hidden>At least 10 characters. A few words work well.</small></div><label class="auth-import" id="auth-import-row" hidden><input type="checkbox" id="auth-import" checked><span>Bring my guest progress into this account</span></label><p id="auth-error" class="auth-error" role="alert" hidden></p><button class="btn btn-primary auth-submit" id="auth-submit" type="submit">Log in <span>→</span></button></form><p class="auth-switch"><span id="auth-switch-copy">New around here?</span> <button id="auth-switch">Create an account</button></p><p class="auth-local-note">Local account · Saved on this computer.</p></dialog>
+  <script type="module" src="app.js?v=6"></script>
 </body></html>
