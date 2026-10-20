@@ -337,3 +337,20 @@
         cursor: pointer;
     }
 }
+
+@utility lm-marquee {
+    animation: var(--animate-marquee);
+}
+
+@utility lm-caret {
+    animation: var(--animate-caret);
+}
+
+@keyframes lm-confetti-fall {
+    0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate3d(0, 105vh, 0) rotate(720deg); opacity: 0; }
+}
+
+@utility lm-confetti {
+    animation: lm-confetti-fall 1.8s ease-in forwards;
+}

@@ -258,7 +258,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
           let current = "";
           for (const part of p.split("/").filter(Boolean)) {
             current += "/" + part;
-            if (fs[current] && fs[current].type !== "dir") throw Error(current + ": Not a directory");
+            if (fs[current]?.type && fs[current]?.type !== "dir") throw Error(current + ": Not a directory");
             fs[current] ??= dir();
           }
         } else {
