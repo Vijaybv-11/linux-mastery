@@ -46,6 +46,8 @@ Each mission runs a simulated shell in your browser. You type real commands into
 filesystem panel updates as you go, and nothing you break is real. Guest progress is saved in
 `localStorage`. You can also create an optional local account to keep progress on the server.
 
+> 🚧 **Note:** Live hosting is coming soon — stay tuned.
+
 <a id="features"></a>
 
 ## ✨ Features
@@ -171,7 +173,7 @@ Mission pages are generated from `lessons` automatically.
 Pull requests are welcome, especially new missions and shell commands.
 
 1. Fork the repository.
-2. Create a branch: `git checkout -b feature/amazing-feature`.
+2. Create a branch: `git switch -c feature/amazing-feature`.
 3. Make your changes, then run `npm run lint`, `npm run test:run` and `npm run build`.
 4. Commit, push, and open a pull request.
 
