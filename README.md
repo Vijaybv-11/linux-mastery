@@ -24,6 +24,14 @@
 
 ---
 
+## 💡 Inspired by
+
+This project is inspired by [**Git Mastery**](https://gitmastery.me/) by [Mika Stiebitz](https://github.com/MikaStiebitz) — an interactive browser game that teaches Git through hands-on terminal challenges. We loved the concept and UI/UX so much that we built Linux Mastery on the same stack and design patterns, adapted for the Linux terminal.
+
+👉 Check out the original: [github.com/MikaStiebitz/Git-Mastery](https://github.com/MikaStiebitz/Git-Mastery)
+
+---
+
 ## 🐧 What it is
 
 Most Linux tutorials are something you read. Linux Mastery is something you **play**.
