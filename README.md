@@ -1,29 +1,201 @@
-# Linux Mastery
+<div align="center">
+  <img src="./public/logo.svg" alt="Linux Mastery logo" width="96" />
 
-A local Linux learning game with ten beginner missions, a simulated shell, a live file tree, a free playground, and email/password accounts. The frontend uses HTML, CSS, and JavaScript modules. The account server uses Python's standard library and SQLite; there are no third-party application dependencies.
+  <h1>&gt;_ Linux Mastery</h1>
 
-The arcade theme uses aubergine surfaces, orange action buttons, lime completion states, and Bungee display headings. Theme colors live in the `:root` variables in `dist/styles.css`. The penguin illustration is an original inline SVG in `dist/index.html`. Celebrations respect reduced-motion settings. Google Fonts supplies the typefaces, with local fallback fonts if unavailable.
+  <p><b>Learn the Linux terminal by playing.</b><br/>
+  A browser game where you type real shell commands, watch the file tree react, and earn XP with Maya, your first-day teammate.</p>
 
-This project is currently local-only. Running the preview does not upload or publish it.
+  <p>
+    <a href="#features">Features</a> ·
+    <a href="#getting-started">Getting started</a> ·
+    <a href="#project-structure">Project structure</a> ·
+    <a href="#contributing">Contributing</a>
+  </p>
 
-Run `python3 server.py` from this directory and visit http://localhost:5173. `npm run dev` runs the same server if Node/npm is installed. Use Python 3.10+ with scrypt support. A plain static HTTP server can display the frontend but cannot provide accounts.
+  <p>
+    <img src="https://img.shields.io/badge/Next.js%2016-1E0F1C?style=flat-square&logo=next.js&logoColor=F5F4FD" alt="Next.js 16" />
+    <img src="https://img.shields.io/badge/TypeScript-1E0F1C?style=flat-square&logo=typescript&logoColor=FF8A3D" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind%20CSS%204-1E0F1C?style=flat-square&logo=tailwindcss&logoColor=FF8A3D" alt="Tailwind CSS 4" />
+    <img src="https://img.shields.io/badge/GSAP-1E0F1C?style=flat-square&logo=greensock&logoColor=B7F652" alt="GSAP" />
+    <img src="https://img.shields.io/badge/Radix%20UI-1E0F1C?style=flat-square&logo=radixui&logoColor=F5F4FD" alt="Radix UI" />
+  </p>
+</div>
 
-For a different port, run `python3 server.py --port 5174`. All paths resolve relative to `server.py`, so it can also be launched from another directory using its absolute path.
+---
 
-For a temporary Cloudflare Tunnel preview, start the tunnel to `http://localhost:5173`, then restart the app with `python3 server.py --public-origin https://your-exact-hostname.trycloudflare.com`. Substitute the HTTPS URL printed by your tunnel. Only that exact hostname is allowed; other tunnel hostnames remain blocked. Login uses same-origin checks and Secure cookies on the HTTPS preview, while ordinary localhost access still works. A new quick-tunnel URL requires restarting the app with the new value. The app remains bound to loopback, and accounts and progress remain on this computer. Stop the tunnel to end public access; omit the flag to return to localhost-only operation.
+## 💡 Inspired by
 
-Run `npm test` with Node 22+ for command-engine and mission checks. Run `python3 -m unittest discover -s tests -p 'test_*.py'` for account API integration tests. The latter opens a loopback test server and uses a temporary database, keeping your real accounts untouched.
+This project is inspired by [**Git Mastery**](https://gitmastery.me/) by [Mika Stiebitz](https://github.com/MikaStiebitz) — an interactive browser game that teaches Git through hands-on terminal challenges. We loved the concept and UI/UX so much that we built Linux Mastery on the same stack and design patterns, adapted for the Linux terminal.
 
-The terminal is an educational simulation, not an operating system. Supported syntax is documented in the in-app field guide. Different missions have independent workspaces; mission reset preserves earned XP. Advanced pipes, processes, services, and networking are outside this first chapter.
+👉 Check out the original: [github.com/MikaStiebitz/Git-Mastery](https://github.com/MikaStiebitz/Git-Mastery)
 
-The layout and interactions follow GitMastery's UI: a sticky header with nav, field-guide button and XP chip; a hero with a command ticker; a player dashboard; a stage-based learning path; and a level workspace. The workspace has a milestone progress bar, a terminal panel, and a Challenge/Filesystem tabbed panel with objective checkboxes and collapsible hints. The playground puts the filesystem first, and the field guide is searchable. Linux's own palette, mascot, and copy are kept.
+---
 
-Each mission includes a story briefing from a fictional teammate, Maya, and a real-world use case. The briefing opens as a modal the first time a mission is entered and can be replayed with "Show Story". The list of seen briefings is kept in the UI-only localStorage key `linux-mastery-story-seen`. The `scenario` object on each lesson in `dist/lessons.js` holds its story, setting, and use case. These briefings describe a shared first-day narrative; each mission still starts with its own prepared practice filesystem.
+## 🐧 What it is
 
-Guest progress stays in browser localStorage. Signed-in users have separate progress saved to `.data/accounts.sqlite3`, outside the served `dist` directory. Signup offers an explicit choice to bring guest progress into the new account. Logging into an existing account loads that account's progress; logging out restores the separate guest workspace.
+Most Linux tutorials are something you read. Linux Mastery is something you **play**.
 
-Passwords are stored as salted scrypt hashes. Sessions use random tokens in HttpOnly, SameSite=Strict cookies, expire after seven days, and are invalidated on logout. Only token hashes are stored in SQLite. The local server checks request origin and hostname and limits repeated login attempts. Pending or failed saves are shown in the progress bar, and logout waits for progress to save.
+```console
+explorer@linux:~$ mkdir projects
+explorer@linux:~$ cd projects
+explorer@linux:~/projects$ touch notes.txt          ★ +50 XP
+```
 
-These are local accounts, not verified email identities. No email verification or password reset is provided. The server binds to `127.0.0.1` and is intended for local development; public hosting would need a production server, HTTPS, and a recovery flow. `.data/` is ignored by Git and should stay private. The old `.openai/hosting.json` is not used when running locally.
+Each mission runs a simulated shell in your browser. You type real commands into a terminal, the
+filesystem panel updates as you go, and nothing you break is real. Guest progress is saved in
+`localStorage`. You can also create an optional local account to keep progress on the server.
 
-Visual and learning inspiration: [GitMastery](https://github.com/MikaStiebitz/Git-Mastery). This project uses original source and assets.
+<a id="features"></a>
+
+## ✨ Features
+
+|                           |                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod` and more |
+| 🌳 **Live file tree**     | The Filesystem tab redraws the virtual filesystem after every command                |
+| 📖 **Maya's story**       | Every mission opens with a story briefing and a real-world use case                   |
+| 🎯 **Structured path**    | Ten missions in stages: *Find your way*, *Make it yours*, *Work with files*           |
+| ✅ **Challenge panel**    | Objective checklist, step-by-step hints and a concept explainer for each mission      |
+| 🎮 **Playground**         | A free sandbox with no goals                                                          |
+| 📚 **Field Guide**        | A searchable cheat sheet of every supported command                                   |
+| 📈 **XP and ranks**       | XP per mission, a rank that grows with progress, and confetti when you finish a mission |
+| 🔐 **Local accounts**     | Optional email/password accounts (Python + SQLite); you can bring guest progress into a new account |
+| ⌨️ **Terminal comforts**  | Command history (↑/↓), Tab completion, `Ctrl+L` to clear, `Ctrl+C` to cancel           |
+
+## 🛠️ Tech stack
+
+**Next.js 16** (App Router, static export) · **React 19** · **TypeScript** · **Tailwind CSS 4** ·
+**Radix UI** · **GSAP** (with ScrollTrigger) · **Lucide** icons · **Geist** fonts · **Vitest**.
+
+The shell simulation, mission engine and progress system are written from scratch. State lives in
+React Context (`GameContext`, `AuthContext`) and `localStorage`. The only backend is the optional
+account API in [`server.py`](./server.py), built on Python's standard library and SQLite. It serves
+the static export and adds `/api/*` routes, and the game works fully without it.
+
+UI and UX follow [GitMastery](https://github.com/MikaStiebitz/Git-Mastery). The Linux identity is
+kept: orange/aubergine palette, the penguin, Maya, the Field Guide, and `>_` branding. Design tokens
+(`--color-lm-*`) are defined in [`src/styles/globals.css`](./src/styles/globals.css).
+
+<a id="getting-started"></a>
+
+## 🚦 Getting started
+
+Requires **Node 20+** (22 recommended). **Python 3.10+** with scrypt support is needed only for accounts.
+
+```bash
+git clone https://github.com/Vijaybv-11/linux-mastery
+cd linux-mastery
+npm install
+npm run dev            # http://localhost:3000 (UI only, no accounts)
+```
+
+To run the full app with local accounts:
+
+```bash
+npm run serve          # next build → out/, then python3 server.py
+# open http://localhost:5173
+```
+
+| Command                 | What it does                                                    |
+| ----------------------- | --------------------------------------------------------------- |
+| `npm run dev`           | Next.js dev server with hot reload                              |
+| `npm run build`         | Static export to `out/`                                         |
+| `npm start`             | `python3 server.py`: serves `out/` (or legacy `dist/`) plus the account API |
+| `npm run serve`         | Build, then start the account server                            |
+| `npm run lint`          | ESLint (flat config, `eslint-config-next`)                      |
+| `npm run format`        | Prettier over the repo                                          |
+| `npm test`              | Vitest in watch mode                                            |
+| `npm run test:run`      | Vitest once, the way CI runs it                                 |
+| `npm run test:accounts` | Python integration tests for the account API (temporary database) |
+
+### Server options
+
+- `python3 server.py --port 5174` uses a different port.
+- `python3 server.py --public-origin https://<exact-host>.trycloudflare.com` is for a temporary
+  Cloudflare Tunnel preview. Only that exact hostname is allowed, and cookies become `Secure`.
+- The server binds to `127.0.0.1`. Accounts live in `.data/accounts.sqlite3`, which Git ignores;
+  keep it private.
+
+<a id="project-structure"></a>
+
+## 🗂️ Project structure
+
+```text
+src/
+├── app/                        # Next.js App Router
+│   ├── layout.tsx              # Fonts, providers, Navbar/Footer, global dialogs
+│   ├── page.tsx                # Home: hero, ticker, player HUD, journey path (GSAP)
+│   ├── mission/[id]/page.tsx   # Statically generated mission pages (1–10)
+│   ├── playground/page.tsx     # Free-play shell
+│   └── not-found.tsx           # Terminal-style 404
+├── components/
+│   ├── home/HeroDemo.tsx       # Animated demo terminal + penguin
+│   ├── layout/                 # Navbar, Footer, Overlays (toast, confetti)
+│   ├── workspace/              # Workspace, Terminal, FileTree, ProgressBar,
+│   │                           # RequirementChecklist, StoryDialog
+│   ├── FieldGuideDialog.tsx    # Searchable command reference
+│   ├── AccountDialog.tsx       # Login / sign-up
+│   └── ui/                     # Radix-based primitives (button, dialog, tabs, …)
+├── contexts/
+│   ├── GameContext.tsx         # Sessions, progress, XP, hints, dialogs
+│   └── AuthContext.tsx         # server.py accounts + remote progress saves
+├── lib/
+│   ├── shell.ts                # Simulated shell + virtual filesystem
+│   ├── lessons.ts              # Missions, Maya's scenarios, checks, groups
+│   ├── progress.ts             # Progress schema, sanitising, ranks
+│   ├── fieldGuide.ts           # Field Guide content
+│   └── utils.ts                # cn() helper
+├── styles/globals.css          # Tailwind v4 theme tokens + utilities
+└── test/                       # Vitest suites
+server.py                       # Static server + local account API
+tests/test_server.py            # Account API integration tests
+dist/                           # Legacy vanilla-JS build (kept for reference)
+```
+
+### Adding a mission
+
+1. Add a `Lesson` to `lessons` in [`src/lib/lessons.ts`](./src/lib/lessons.ts). Give it a `scenario`
+   (Maya's story), `objective`, `concept`, two `hints`, `xp`, and a `check(state, event)` function.
+2. Add its index to a stage in `groups`.
+3. If it needs a new command, implement it in [`src/lib/shell.ts`](./src/lib/shell.ts) and document
+   it in [`src/lib/fieldGuide.ts`](./src/lib/fieldGuide.ts).
+4. Add a test in `src/test/` that the mission starts unsolved and is solved by the intended commands.
+
+Mission pages are generated from `lessons` automatically.
+
+<a id="contributing"></a>
+
+## 🤝 Contributing
+
+Pull requests are welcome, especially new missions and shell commands.
+
+1. Fork the repository.
+2. Create a branch: `git checkout -b feature/amazing-feature`.
+3. Make your changes, then run `npm run lint`, `npm run test:run` and `npm run build`.
+4. Commit, push, and open a pull request.
+
+Keep the Linux theme: the `lm-*` tokens, the penguin, Maya's voice and the `>_` brand mark.
+UI components should stay consistent with the existing Radix primitives in `src/components/ui/`.
+
+## 🔒 Accounts and privacy
+
+- Passwords are stored as salted scrypt hashes.
+- Sessions are random tokens in HttpOnly, SameSite=Strict cookies. They expire after seven days
+  and are invalidated on logout. Only token hashes are stored.
+- The server checks request origin and hostname, and rate-limits repeated login attempts.
+- These are local accounts only: there is no email verification and no password reset. Public
+  hosting would need a production server, HTTPS and a recovery flow.
+
+## ⚠️ Scope
+
+The terminal is an educational simulation, not an operating system. The supported syntax is listed in
+the in-app Field Guide. Each mission has its own workspace, and resetting a mission keeps the XP you
+earned. Pipes, processes, services and networking are outside this first chapter.
+
+---
+
+<p align="center">
+  Visual and learning inspiration: <a href="https://github.com/MikaStiebitz/Git-Mastery">GitMastery</a>.
+  Linux Mastery uses original source and assets.
+</p>

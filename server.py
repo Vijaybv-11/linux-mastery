@@ -165,7 +165,7 @@ class Handler(SimpleHTTPRequestHandler):
     server_version = "LinuxMasteryLocal/1.0"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(ROOT / "dist"), **kwargs)
+        super().__init__(*args, directory=str((ROOT / "out" if (ROOT / "out").exists() else ROOT / "dist")), **kwargs)
 
     def end_headers(self):
         self.send_header("X-Content-Type-Options", "nosniff")
