@@ -6,8 +6,12 @@
   <p><b>Learn the Linux terminal by playing.</b><br/>
   A browser game where you type real shell commands, watch the file tree react, and earn XP with Maya, your first-day teammate.</p>
 
+  <!-- ▶️ Live demo (temporary preview) — add the hosted URL here when available, e.g.:
+       <p><a href="https://your-temp-host"><b>▶️ Play Linux Mastery</b></a></p> -->
+
   <p>
     <a href="#features">Features</a> ·
+    <a href="#roadmap">Roadmap</a> ·
     <a href="#getting-started">Getting started</a> ·
     <a href="#project-structure">Project structure</a> ·
     <a href="#contributing">Contributing</a>
@@ -46,8 +50,6 @@ Each mission runs a simulated shell in your browser. You type real commands into
 filesystem panel updates as you go, and nothing you break is real. Guest progress is saved in
 `localStorage`. You can also create an optional local account to keep progress on the server.
 
-> 🚧 **Note:** Live hosting is coming soon — stay tuned.
-
 <a id="features"></a>
 
 ## ✨ Features
@@ -57,13 +59,29 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 | 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod` and more |
 | 🌳 **Live file tree**     | The Filesystem tab redraws the virtual filesystem after every command                |
 | 📖 **Maya's story**       | Every mission opens with a story briefing and a real-world use case                   |
-| 🎯 **Structured path**    | Ten missions in stages: *Find your way*, *Make it yours*, *Work with files*           |
+| 🎯 **Structured path**    | Seventeen missions across four stages: *Find your way*, *Make it yours*, *Work with files*, *Lock it down* — with more on the way |
 | ✅ **Challenge panel**    | Objective checklist, step-by-step hints and a concept explainer for each mission      |
 | 🎮 **Playground**         | A free sandbox with no goals                                                          |
 | 📚 **Field Guide**        | A searchable cheat sheet of every supported command                                   |
 | 📈 **XP and ranks**       | XP per mission, a rank that grows with progress, and confetti when you finish a mission |
 | 🔐 **Local accounts**     | Optional email/password accounts (Python + SQLite); you can bring guest progress into a new account |
 | ⌨️ **Terminal comforts**  | Command history (↑/↓), Tab completion, `Ctrl+L` to clear, `Ctrl+C` to cancel           |
+
+<a id="roadmap"></a>
+
+## 🗺️ Roadmap
+
+Linux Mastery is in its **Beginner** chapter today — seventeen missions across four stages. What's
+planned next:
+
+| Status     | Item                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 🔜 Next     | **Pipes & text** stage — chain commands and reshape text with pipes, `grep`, `sort`, and `wc`                |
+| 🧭 Planned  | **Difficulty tiers** — a Beginner / Intermediate / Advanced split so the path scales with you, like GitMastery |
+| 🃏 Planned  | **Concept visualization cards** — interactive cards that show how each command reshapes the filesystem and permissions |
+| 🌐 Planned  | **Live hosting** — a temporary preview first, then a permanent home once traffic justifies it                |
+
+Ideas and new missions are welcome — see [Contributing](#contributing).
 
 ## 🛠️ Tech stack
 
@@ -128,7 +146,7 @@ src/
 ├── app/                        # Next.js App Router
 │   ├── layout.tsx              # Fonts, providers, Navbar/Footer, global dialogs
 │   ├── page.tsx                # Home: hero, ticker, player HUD, journey path (GSAP)
-│   ├── mission/[id]/page.tsx   # Statically generated mission pages (1–10)
+│   ├── mission/[id]/page.tsx   # Statically generated mission pages (1–17)
 │   ├── playground/page.tsx     # Free-play shell
 │   └── not-found.tsx           # Terminal-style 404
 ├── components/
@@ -152,7 +170,6 @@ src/
 └── test/                       # Vitest suites
 server.py                       # Static server + local account API
 tests/test_server.py            # Account API integration tests
-dist/                           # Legacy vanilla-JS build (kept for reference)
 ```
 
 ### Adding a mission
