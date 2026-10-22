@@ -9,14 +9,39 @@ const SCRIPT = [
   { cmd: "cat welcome.txt", out: "Welcome aboard. — Maya" },
 ];
 
-/** Animated demo terminal + penguin sticker (GitMastery hero art, Linux edition). */
+interface Done { cmd: string; out: string }
+
+/**
+ * Animated demo terminal + penguin sticker (GitMastery hero art, Linux edition).
+ * Types each command character by character, shows its output, then moves on —
+ * a tasteful terminal-typing accent. Honors prefers-reduced-motion.
+ */
 export function HeroDemo() {
-  const [step, setStep] = useState(0);
+  const [done, setDone] = useState<Done[]>([]);
+  const [typed, setTyped] = useState("");
+  const [line, setLine] = useState(0);
+
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setStep(SCRIPT.length);
-    const t = setInterval(() => setStep(s => (s >= SCRIPT.length + 2 ? 0 : s + 1)), 1100);
-    return () => clearInterval(t);
-  }, []);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDone(SCRIPT);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout>;
+    const step = SCRIPT[line];
+    if (!step) {
+      // Loop: pause on the finished screen, then reset.
+      timer = setTimeout(() => { setDone([]); setTyped(""); setLine(0); }, 2600);
+      return () => clearTimeout(timer);
+    }
+    if (typed.length < step.cmd.length) {
+      timer = setTimeout(() => setTyped(step.cmd.slice(0, typed.length + 1)), 55 + Math.random() * 45);
+    } else {
+      timer = setTimeout(() => { setDone(d => [...d, step]); setTyped(""); setLine(l => l + 1); }, 650);
+    }
+    return () => clearTimeout(timer);
+  }, [typed, line]);
+
+  const current = SCRIPT[line];
   return (
     <div className="relative">
       <div className="overflow-hidden rounded-2xl border-2 border-lm-line bg-[#120a1d] shadow-[0_8px_0_var(--color-lm-line)]">
@@ -25,13 +50,15 @@ export function HeroDemo() {
           <span className="ml-2 font-code text-xs text-lm-ink-dim">explorer@linux: ~</span>
         </div>
         <div className="min-h-56 space-y-1 p-5 font-code text-sm" aria-hidden>
-          {SCRIPT.slice(0, Math.min(step, SCRIPT.length)).map(line => (
-            <div key={line.cmd}>
-              <div><span className="text-lm-orange">$</span> <span className="text-lm-ink">{line.cmd}</span></div>
-              {line.out && <div className="text-lm-ink-muted">{line.out}</div>}
+          {done.map((l, i) => (
+            <div key={`${l.cmd}-${i}`}>
+              <div><span className="text-lm-orange">$</span> <span className="text-lm-ink">{l.cmd}</span></div>
+              {l.out && <div className="text-lm-ink-muted">{l.out}</div>}
             </div>
           ))}
-          <div><span className="text-lm-orange">$</span> <span className="lm-caret inline-block h-4 w-2 translate-y-0.5 bg-lm-orange" /></div>
+          {current && (
+            <div><span className="text-lm-orange">$</span> <span className="text-lm-ink">{typed}</span><span className="lm-caret ml-0.5 inline-block h-4 w-2 translate-y-0.5 bg-lm-orange" /></div>
+          )}
         </div>
       </div>
       <span className="absolute -top-4 -right-3 rotate-6 rounded-xl border-2 border-lm-gold-edge bg-lm-gold px-3 py-1 font-display text-sm text-lm-void shadow-[0_4px_0_var(--color-lm-gold-edge)]">+10 XP</span>

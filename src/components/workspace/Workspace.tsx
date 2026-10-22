@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen, FolderTree, HelpCircle, Lock, RotateCcw, Shield } from "lucide-react";
 import { gsap } from "gsap";
 import { Button } from "~/components/ui/button";
+import { CommandChip } from "~/components/ui/CommandChip";
 import { useGame } from "~/contexts/GameContext";
 import { lessons, pad2 } from "~/lib/lessons";
 import { isUnlocked, PLAYGROUND } from "~/lib/progress";
@@ -68,7 +69,7 @@ export function Workspace({ index }: { index: number }) {
   }
 
   return (
-    <main ref={root} className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
+    <main ref={root} className="mx-auto w-full max-w-7xl space-y-5 px-4 py-6 sm:px-6">
       <div data-anim="head" className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-lm-orange">{lesson ? `MISSION ${pad2(index + 1)} / ${lessons.length}` : "FREE EXPLORATION"}</p>
@@ -99,9 +100,9 @@ export function Workspace({ index }: { index: number }) {
       </div>
       {!playground && <div data-anim="head"><ProgressBar done={completed.length} total={lessons.length} xp={xp} /></div>}
 
-      <div className={cn("grid gap-5 lg:grid-cols-[1.15fr_1fr]", playground && "lg:grid-cols-[1fr_1.15fr]")}>
-        <div data-anim="panel" className={cn(playground && "lg:order-2")}><Terminal index={index} /></div>
-        <section data-anim="panel" className="lm-panel overflow-hidden rounded-2xl">
+      <div className={cn("grid w-full gap-5 lg:grid-cols-[1.15fr_1fr]", playground && "lg:grid-cols-[1fr_1.15fr]")}>
+        <div data-anim="panel" className={cn("min-w-0", playground && "lg:order-2")}><Terminal index={index} /></div>
+        <section data-anim="panel" className="lm-panel min-w-0 overflow-hidden rounded-2xl">
           <div role="tablist" className="flex border-b border-lm-line" aria-label="Workspace panels">
             {ordered.map(t => (
               <button key={t.id} role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} tabIndex={tab === t.id ? 0 : -1}
@@ -124,9 +125,12 @@ export function Workspace({ index }: { index: number }) {
                       <Button variant="outline" size="sm" onClick={() => setStoryOpen(true)}><BookOpen className="size-4" />Show Story</Button>
                     </div>
                     {hintsOpen && (
-                      <div id="hints-box" className="space-y-2 rounded-xl border border-lm-violet/50 bg-lm-grape/15 p-4">
-                        <div className="flex justify-between text-sm"><strong className="text-lm-violet">Hints</strong><span className="text-lm-ink-dim" aria-live="polite">Hint {shown} of {lesson.hints.length}</span></div>
-                        <ul className="space-y-2 text-sm">
+                      <div id="hints-box" className="space-y-3 rounded-xl border border-lm-violet/50 bg-lm-grape/15 p-4">
+                        <div className="flex justify-between text-sm"><strong className="flex items-center gap-1.5 text-lm-violet"><HelpCircle className="size-4" aria-hidden />Hints</strong><span className="text-lm-ink-dim" aria-live="polite">Hint {shown} of {lesson.hints.length}</span></div>
+                        <ul className="space-y-2.5 text-sm">
+                          <li className="flex flex-wrap items-center gap-2">Use the <CommandChip>{lesson.command}</CommandChip> command.</li>
+                          {/* Trusted, authored-in-repo HTML containing only <code> tags. */}
+                          <li className="lm-cmd-copy flex gap-2 text-lm-ink-soft"><span aria-hidden className="text-lm-violet">•</span><span dangerouslySetInnerHTML={{ __html: lesson.concept }} /></li>
                           {lesson.hints.slice(0, shown).map((h, n) => (
                             <li key={n} className="flex gap-2"><span className="h-fit rounded bg-lm-deep px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-lm-violet uppercase">{n === 0 ? "Nudge" : "Example"}</span>{h}</li>
                           ))}
@@ -146,9 +150,10 @@ export function Workspace({ index }: { index: number }) {
                   </div>
                 )}
                 <div className="lm-inset rounded-xl p-4 text-sm">
-                  <p className="mb-1 text-xs font-bold tracking-[0.15em] text-lm-cyan uppercase">{lesson ? "The command:" : "Ideas to try:"}</p>
+                  <p className="mb-2 text-xs font-bold tracking-[0.15em] text-lm-cyan uppercase">{lesson ? "The command:" : "Ideas to try:"}</p>
+                  {lesson && <div className="mb-2 flex flex-wrap items-center gap-2"><CommandChip>{lesson.command}</CommandChip></div>}
                   {/* Trusted, authored-in-repo HTML containing only <code> tags. */}
-                  <div className="[&_code]:rounded [&_code]:bg-lm-void [&_code]:px-1.5 [&_code]:font-code [&_code]:text-lm-lime"
+                  <div className="lm-cmd-copy leading-relaxed text-lm-ink-soft"
                     dangerouslySetInnerHTML={{ __html: lesson?.concept ?? "<code>ls</code> is a good place to start. Try <code>cd Documents</code>, then <code>cat welcome.txt</code>." }} />
                 </div>
                 {lesson && <span className="inline-block rounded-full border border-lm-gold-edge bg-lm-gold/10 px-2.5 py-0.5 text-xs font-semibold text-lm-gold">{lesson.xp} XP</span>}

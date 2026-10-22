@@ -71,7 +71,7 @@ export default function HomePage() {
             { label: "Next mission", value: nextLesson === -1 ? "✓" : pad2(nextLesson + 1), tone: "text-lm-orange" },
             { label: "Rank", value: rank.title, tone: "text-lm-violet text-base" },
           ].map(s => (
-            <div key={s.label} className="lm-panel rounded-2xl p-4">
+            <div key={s.label} className="lm-panel rounded-2xl p-4 transition-transform duration-200 hover:-translate-y-1">
               <p className="text-xs tracking-[0.15em] text-lm-ink-dim uppercase">{s.label}</p>
               <p className={cn("mt-1 font-display text-2xl", s.tone)}>{s.value}</p>
             </div>
@@ -141,7 +141,7 @@ export default function HomePage() {
           { t: "A nudge when you need one", d: "Small missions, useful hints, and a field guide right beside you." },
           { t: "A story to follow", d: "Help Maya through her team's first Linux shift, mission by mission." },
         ].map(f => (
-          <div key={f.t} className="lm-panel rounded-2xl p-6"><h3 className="font-display text-xl">{f.t}</h3><p className="mt-2 text-lm-ink-muted">{f.d}</p></div>
+          <div key={f.t} className="lm-panel rounded-2xl p-6 transition-transform duration-200 hover:-translate-y-1"><h3 className="font-display text-xl">{f.t}</h3><p className="mt-2 text-lm-ink-muted">{f.d}</p></div>
         ))}
       </section>
     </main>

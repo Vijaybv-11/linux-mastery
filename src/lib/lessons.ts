@@ -63,7 +63,7 @@ export const lessons: Lesson[] = [
     objective: "List your home directory, including its hidden files.",
     concept:
       "<code>ls</code> lists directory contents. An option changes a command’s behavior: <code>-a</code> includes names beginning with a dot.",
-    hints: ["Try adding the “all” option to ls.", "Run ls -a while you are in ~."],
+    hints: ["Try adding the “all” option to ls.", "Run ls -a ~ to list your home from anywhere."],
     xp: 50,
     check: (_s, e) => e.command === "ls" && e.path === HOME && !!e.listed?.includes(HOME + "/.welcome"),
     success: "You spotted the hidden file. Dotfiles often hold configuration on Linux.",
@@ -84,7 +84,7 @@ export const lessons: Lesson[] = [
     objective: "Move into the Documents directory inside your home directory.",
     concept:
       "<code>cd</code> changes your working directory. Use a folder name for a relative path, or a path starting with <code>/</code> for an absolute one.",
-    hints: ["Documents is right inside your current directory.", "Try cd Documents. An absolute path works too."],
+    hints: ["Documents sits inside your home directory; cd ~ returns home if you have wandered.", "Run cd ~/Documents. It works from anywhere."],
     xp: 50,
     check: (s) => s.cwd === HOME + "/Documents",
     success: "You made your first move. Try cd .. whenever you want to go up a directory.",
@@ -105,7 +105,7 @@ export const lessons: Lesson[] = [
     objective: "Create a directory named projects inside your home directory.",
     concept:
       "<code>mkdir</code> makes a directory. Names are case-sensitive: <code>projects</code> and <code>Projects</code> are different names.",
-    hints: ["Use the make-directory command with the new folder’s name.", "From ~, run mkdir projects."],
+    hints: ["Use the make-directory command with the new folder’s name.", "Run mkdir ~/projects. It works from anywhere."],
     xp: 75,
     check: (s) => s.fs[HOME + "/projects"]?.type === "dir",
     success: "Your own corner of the filesystem. That’s where the interesting things begin.",
@@ -128,7 +128,7 @@ export const lessons: Lesson[] = [
       "<code>touch</code> creates a file when it doesn’t exist. You can reach a file through its path without changing directories.",
     hints: [
       "You can use projects/hello.txt as the path, or cd into projects first.",
-      "From ~, run touch projects/hello.txt.",
+      "Run touch ~/projects/hello.txt. It works from anywhere.",
     ],
     xp: 75,
     check: (s) =>
@@ -153,7 +153,7 @@ export const lessons: Lesson[] = [
       "<code>echo</code> prints text. <code>></code> sends that output into a file, replacing its contents. <code>>></code> appends instead.",
     hints: [
       "Put your message in quotes, then redirect it to the file.",
-      'Run echo "Hello Linux" > projects/hello.txt.',
+      'Run echo "Hello Linux" > ~/projects/hello.txt.',
     ],
     xp: 100,
     check: (s) => !!s.fs[HOME + "/projects/hello.txt"]?.content?.includes("Hello Linux"),
@@ -177,7 +177,7 @@ export const lessons: Lesson[] = [
       "<code>cat</code> reads files and prints their contents. You can also give it several file paths to read them together.",
     hints: [
       "Use the command for printing a file, followed by the note’s path.",
-      "From ~, run cat Documents/welcome.txt.",
+      "Run cat ~/Documents/welcome.txt. It works from anywhere.",
     ],
     xp: 75,
     check: (_s, e) =>
@@ -202,7 +202,7 @@ export const lessons: Lesson[] = [
       "<code>cp</code> takes a source and a destination, in that order. The destination may have a new filename.",
     hints: [
       "You need the original note’s path first and your new file’s path second.",
-      "Run cp Documents/welcome.txt projects/guide.txt.",
+      "Run cp ~/Documents/welcome.txt ~/projects/guide.txt.",
     ],
     xp: 100,
     check: (s) =>
@@ -227,7 +227,7 @@ export const lessons: Lesson[] = [
     objective: "Rename projects/draft.txt to projects/launch.txt, preserving its contents.",
     concept:
       "<code>mv</code> moves a file. When the destination is a different name in the same directory, it renames it.",
-    hints: ["Use the same source-then-destination pattern as cp.", "Run mv projects/draft.txt projects/launch.txt."],
+    hints: ["Use the same source-then-destination pattern as cp.", "Run mv ~/projects/draft.txt ~/projects/launch.txt."],
     xp: 100,
     check: (s) =>
       !s.fs[HOME + "/projects/draft.txt"] &&
@@ -250,7 +250,7 @@ export const lessons: Lesson[] = [
     objective: "Remove Downloads/old.tmp. Keep both files in Documents.",
     concept:
       "<code>rm</code> removes files. A normal Linux shell has no automatic undo for this command. Here, you can reset your practice workspace whenever you need.",
-    hints: ["Give rm the exact path of the temporary file.", "Run rm Downloads/old.tmp."],
+    hints: ["Give rm the exact path of the temporary file.", "Run rm ~/Downloads/old.tmp."],
     xp: 125,
     check: (s) =>
       !s.fs[HOME + "/Downloads/old.tmp"] &&
