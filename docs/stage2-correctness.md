@@ -141,6 +141,40 @@ right spot and enforces the "add the bit" behaviour, matching real `chmod +t`.
 
 ---
 
+## Lesson 16 — "Default to safe" (`umask 027`)
+
+**Objective:** Set the umask to `027` so new files start closed to others
+(new files become `640`, new directories `750`).
+
+Everything in lessons 11–15 *fixed* permissions after the fact. `umask` sets
+the **defaults** so new files start out right, and it's the piece that makes the
+permissions picture complete. The one idea that trips everyone up: a umask is a
+mask of bits to **remove**, not the permissions to grant. It works like this:
+
+- New files are born from a **base mode of `666`** (rw for everyone — note: no
+  execute, which is why fresh files aren't executable by default).
+- New directories are born from a **base mode of `777`**.
+- The umask bits are **subtracted** from that base. Formally, the effective
+  mode is `base AND NOT mask` — any bit set in the mask is cleared in the
+  result.
+
+Work through `027` digit by digit against a file's base `666`:
+
+- Owner digit `0` removes nothing → owner keeps `6` (rw-).
+- Group digit `2` removes write → group goes `6` − write = `4` (r--).
+- Others digit `7` removes read+write+execute → others go to `0` (---).
+
+So a new **file** lands at **`640`** (`rw-r-----`) and a new **directory** at
+**`750`** (`rwxr-x---`) — directories keep their execute/"enter" bits because
+the base was `777`. That's exactly what a real shell produces after `umask 027`,
+and it's why `027` is a common "shared server" default: your group can see your
+work, the rest of the world can't. Two facts worth carrying away: `umask` with
+no argument **prints** the current mask (commonly `0022`, which yields the
+familiar `644`/`755`), and the setting lasts only for the current shell session
+unless you add it to a shell profile — matching how the lesson frames it.
+
+---
+
 ### How to double-check any of this yourself
 
 On any Linux machine (or this game's own shell), the fastest sanity check is:
