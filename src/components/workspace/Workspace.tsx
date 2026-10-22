@@ -69,7 +69,7 @@ export function Workspace({ index }: { index: number }) {
   }
 
   return (
-    <main ref={root} className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
+    <main ref={root} className="mx-auto w-full max-w-7xl space-y-5 px-4 py-6 sm:px-6">
       <div data-anim="head" className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-lm-orange">{lesson ? `MISSION ${pad2(index + 1)} / ${lessons.length}` : "FREE EXPLORATION"}</p>
@@ -100,7 +100,7 @@ export function Workspace({ index }: { index: number }) {
       </div>
       {!playground && <div data-anim="head"><ProgressBar done={completed.length} total={lessons.length} xp={xp} /></div>}
 
-      <div className={cn("grid gap-5 lg:grid-cols-[1.15fr_1fr]", playground && "lg:grid-cols-[1fr_1.15fr]")}>
+      <div className={cn("grid w-full gap-5 lg:grid-cols-[1.15fr_1fr]", playground && "lg:grid-cols-[1fr_1.15fr]")}>
         <div data-anim="panel" className={cn("min-w-0", playground && "lg:order-2")}><Terminal index={index} /></div>
         <section data-anim="panel" className="lm-panel min-w-0 overflow-hidden rounded-2xl">
           <div role="tablist" className="flex border-b border-lm-line" aria-label="Workspace panels">
