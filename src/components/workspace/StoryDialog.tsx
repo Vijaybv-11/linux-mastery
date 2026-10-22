@@ -2,7 +2,6 @@
 
 import { BookOpen } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { CommandChip } from "~/components/ui/CommandChip";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import { lessons, pad2 } from "~/lib/lessons";
 
@@ -23,19 +22,16 @@ export function StoryDialog({ index, open, onOpenChange }: { index: number; open
           <span className="grid size-10 place-items-center rounded-full bg-lm-grape font-bold" aria-hidden>M</span>
           <span><strong className="block text-sm">Maya</strong><small className="text-xs text-lm-ink-dim">Your teammate · Your first Linux shift</small></span>
         </div>
+        {/* Story narrative with the command woven inline — the concept picks up where the
+            story leaves off, and its <code> chips light up the commands right in the prose
+            (gitmastery style) instead of a separate boxed command section. */}
         <DialogDescription className="text-base leading-relaxed whitespace-pre-line text-lm-ink-soft sm:text-lg">{scenario.story}</DialogDescription>
+        {/* Trusted, authored-in-repo HTML containing only <code> tags. */}
+        <p className="lm-cmd-copy text-base leading-relaxed text-lm-ink-soft sm:text-lg" dangerouslySetInnerHTML={{ __html: lesson.concept }} />
         <div className="lm-inset rounded-xl p-5">
           <strong className="text-xs tracking-[0.15em] text-lm-cyan uppercase">Real-World Context</strong>
           <h3 className="mt-1 font-semibold">{scenario.setting}</h3>
           <p className="text-sm text-lm-ink-muted">{scenario.useCase}</p>
-        </div>
-        <div className="rounded-xl border-2 border-lm-lime/40 bg-lm-lime/5 p-5">
-          <strong className="text-xs tracking-[0.15em] text-lm-lime uppercase">The Command</strong>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <CommandChip>{lesson.command}</CommandChip>
-          </div>
-          {/* Trusted, authored-in-repo HTML containing only <code> tags. */}
-          <p className="lm-cmd-copy mt-3 text-sm leading-relaxed text-lm-ink-soft" dangerouslySetInnerHTML={{ __html: lesson.concept }} />
         </div>
         <div className="rounded-xl border border-lm-orange-edge bg-lm-orange/10 p-5">
           <strong className="text-xs tracking-[0.15em] text-lm-orange uppercase">Your Task</strong>

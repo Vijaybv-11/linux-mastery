@@ -9,11 +9,11 @@ export function CommandChip({ children, className }: { children: React.ReactNode
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-lm-lime bg-lm-void px-2.5 py-0.5 font-code text-sm font-semibold tracking-tight text-lm-lime shadow-[0_0_7px_-3px_var(--color-lm-lime)]",
+        "inline-flex items-center gap-1.5 rounded-md border-[1.5px] border-lm-term bg-lm-void px-2.5 py-0.5 font-code text-sm font-bold tracking-tight text-lm-term shadow-[0_0_8px_-2px_var(--color-lm-term)]",
         className,
       )}
     >
-      <span className="font-code text-lm-lime/55" aria-hidden>&gt;_</span>
+      <span className="font-code text-lm-term/60" aria-hidden>&gt;_</span>
       <span>{children}</span>
     </span>
   );
