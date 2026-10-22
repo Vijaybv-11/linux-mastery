@@ -26,6 +26,10 @@
   </p>
 </div>
 
+<p align="center">
+  <img src="assets/demo.gif" alt="Linux Mastery demo" width="760">
+</p>
+
 ---
 
 ## 💡 Inspired by
