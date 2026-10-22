@@ -71,17 +71,11 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 
 ## 🗺️ Roadmap
 
-Linux Mastery is in its **Beginner** chapter today — seventeen missions across four stages. What's
-planned next:
+Linux Mastery is in its **Beginner** chapter today — seventeen missions across four stages. Up next:
+a **Pipes & text** stage, **Beginner/Intermediate/Advanced** difficulty tiers, **concept
+visualization cards**, and **live hosting**.
 
-| Status     | Item                                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------ |
-| 🔜 Next     | **Pipes & text** stage — chain commands and reshape text with pipes, `grep`, `sort`, and `wc`                |
-| 🧭 Planned  | **Difficulty tiers** — a Beginner / Intermediate / Advanced split so the path scales with you, like GitMastery |
-| 🃏 Planned  | **Concept visualization cards** — interactive cards that show how each command reshapes the filesystem and permissions |
-| 🌐 Planned  | **Live hosting** — a temporary preview first, then a permanent home once traffic justifies it                |
-
-Ideas and new missions are welcome — see [Contributing](#contributing).
+See the full plan in **[ROADMAP.md](./ROADMAP.md)**.
 
 ## 🛠️ Tech stack
 
