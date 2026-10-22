@@ -8,12 +8,16 @@ export const HOME = "/home/explorer";
 export interface FsNode {
   type: "dir" | "file";
   mode: string;
+  owner?: string;
+  group?: string;
   content?: string;
 }
 export type FileSystem = Record<string, FsNode>;
 export interface ShellState {
   cwd: string;
   fs: FileSystem;
+  /** Octal umask (3 digits, e.g. "022") applied to newly created files/dirs. */
+  umask?: string;
 }
 export interface ShellEvent {
   command?: string;
@@ -23,6 +27,7 @@ export interface ShellEvent {
   written?: string;
   source?: string;
   target?: string;
+  options?: string[];
 }
 export interface RunResult {
   state: ShellState;
@@ -55,7 +60,47 @@ export function initialState(lesson = -1): ShellState {
   };
   if ([4, 5, 7, 8].includes(lesson)) fs[HOME + "/projects"] = dir();
   if (lesson === 8) fs[HOME + "/projects/draft.txt"] = file("A small command. A new possibility.\n");
+  if ([10, 11, 12, 13, 14, 15, 16].includes(lesson)) {
+    const S = HOME + "/server";
+    fs[S] = { type: "dir", mode: "755" };
+    fs[S + "/backup.sh"] = { type: "file", mode: "644", content: '#!/bin/sh\necho "Backing up the project..."\n' };
+    fs[S + "/secrets.env"] = {
+      type: "file",
+      mode: "644",
+      content: "API_KEY=keep-this-private\nDB_PASSWORD=change-me\n",
+    };
+    fs[S + "/handover.md"] = {
+      type: "file",
+      mode: "644",
+      owner: "explorer",
+      group: "explorer",
+      content: "Shared server handover notes.\n",
+    };
+    fs[S + "/notes.txt"] = {
+      type: "file",
+      mode: "644",
+      content: "Remember to lock down the secrets file.\n",
+    };
+    fs[S + "/project"] = { type: "dir", mode: "755", group: "explorer" };
+    fs[S + "/uploads"] = { type: "dir", mode: "755" };
+    fs[S + "/logs"] = { type: "dir", mode: "755" };
+    fs[S + "/logs/app.log"] = { type: "file", mode: "644", content: "server started\n" };
+    return { cwd: S, fs };
+  }
   return { cwd: HOME, fs };
+}
+
+/** Users and groups the practice shell recognizes for chown/chgrp. */
+export const CHOWN_USERS = ["explorer", "maya", "root", "deploy", "www-data"];
+export const CHOWN_GROUPS = ["explorer", "developers", "deploy", "www-data", "staff"];
+
+/** Standard login-shell default umask. */
+export const DEFAULT_UMASK = "022";
+
+/** Apply an octal umask to a base mode (666 for files, 777 for dirs) → 3-digit octal string. */
+export function umaskMode(base: number, umask = DEFAULT_UMASK): string {
+  const mask = parseInt(umask, 8) & 0o777;
+  return ((base & ~mask) & 0o777).toString(8).padStart(3, "0");
 }
 
 export function resolvePath(value = "~", cwd = HOME): string {
@@ -141,16 +186,57 @@ export function tokenize(input: string): Token[] {
 
 export const commandNames = [
   "pwd", "ls", "cd", "mkdir", "touch", "echo", "cat", "cp", "mv", "rm",
-  "rmdir", "head", "tail", "wc", "grep", "find", "chmod", "whoami", "clear", "help",
+  "rmdir", "head", "tail", "wc", "grep", "find", "chmod", "chown", "chgrp", "umask", "whoami", "clear", "help",
 ];
 
-const PRINTING = ["echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "find", "help"];
+const PRINTING = ["echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "find", "umask", "help"];
 
 export function permission(mode: string): string {
-  return mode
-    .split("")
-    .map((d) => [4, 2, 1].map((bit, i) => (Number(d) & bit ? "rwx"[i] : "-")).join(""))
-    .join("");
+  const digits = mode.split("").map(Number);
+  const special = mode.length === 4 ? (digits[0] ?? 0) : 0;
+  const [u = 0, g = 0, o = 0] = digits.slice(-3);
+  const chars = [u, g, o]
+    .map((d) => [4, 2, 1].map((bit, i) => (d & bit ? "rwx"[i] : "-")).join(""))
+    .join("")
+    .split("");
+  if (special & 4) chars[2] = u & 1 ? "s" : "S"; // setuid → owner execute slot
+  if (special & 2) chars[5] = g & 1 ? "s" : "S"; // setgid → group execute slot
+  if (special & 1) chars[8] = o & 1 ? "t" : "T"; // sticky → others execute slot
+  return chars.join("");
+}
+
+/**
+ * Apply a chmod spec (octal, +x, or comma-separated symbolic clauses) to a mode
+ * string and return the new mode (3 digits, or 4 when the special nibble is set).
+ */
+function applyChmod(mode: string, spec: string): string {
+  if (/^[0-7]{4}$/.test(spec)) return spec;
+  if (/^[0-7]{3}$/.test(spec)) return spec; // a 3-digit mode clears the special nibble
+  if (spec === "+x") spec = "a+x"; // keep the existing shortcut working
+  let special = mode.length === 4 ? Number(mode[0]) : 0;
+  const ugo = (mode.length === 4 ? mode.slice(1) : mode).padStart(3, "0").slice(-3).split("").map(Number);
+  const classIndex: Record<string, number> = { u: 0, g: 1, o: 2 };
+  for (const clause of spec.split(",")) {
+    const m = /^([ugoa]*)([+\-=])([rwxst]+)$/.exec(clause);
+    if (!m) throw Error("chmod: invalid mode: '" + spec + "'");
+    const [, whoRaw = "", op = "", perms = ""] = m;
+    const who = new Set((!whoRaw || whoRaw.includes("a") ? "ugo" : whoRaw).split("").filter((c) => c in classIndex));
+    const bits = (perms.includes("r") ? 4 : 0) | (perms.includes("w") ? 2 : 0) | (perms.includes("x") ? 1 : 0);
+    for (const c of who) {
+      const i = classIndex[c]!;
+      if (op === "+") ugo[i]! |= bits;
+      else if (op === "-") ugo[i]! &= ~bits;
+      else ugo[i] = bits;
+    }
+    const applySpecial = (bit: number) => (op === "-" ? (special &= ~bit) : (special |= bit));
+    if (perms.includes("s")) {
+      if (who.has("u")) applySpecial(4);
+      if (who.has("g")) applySpecial(2);
+    }
+    if (perms.includes("t")) applySpecial(1);
+  }
+  const body = ugo.join("");
+  return special ? String(special) + body : body;
 }
 
 export function runCommand(state: ShellState, input: string): RunResult {
@@ -173,6 +259,8 @@ export function runCommand(state: ShellState, input: string): RunResult {
     const [cmd = "", ...args] = tokens.map((t) => t.value);
     const fs = next.fs;
     const path = (p: string) => resolvePath(p, next.cwd);
+    const newFile = (content = ""): FsNode => ({ type: "file", mode: umaskMode(0o666, next.umask), content });
+    const newDir = (): FsNode => ({ type: "dir", mode: umaskMode(0o777, next.umask) });
     const requireNode = (p: string): FsNode => {
       const n = fs[p];
       if (!n) throw Error(p + ": No such file or directory");
@@ -215,6 +303,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
       const n = requireNode(p);
       const all = opts.some((o) => o.includes("a"));
       const long = opts.some((o) => o.includes("l"));
+      event.options = [...new Set(opts.join("").split("").filter((c) => c !== "-"))];
       const names =
         n.type === "file"
           ? [p]
@@ -228,7 +317,11 @@ export function runCommand(state: ShellState, input: string): RunResult {
             return (
               (node.type === "dir" ? "d" : "-") +
               permission(node.mode) +
-              "  explorer explorer  " +
+              "  " +
+              (node.owner ?? "explorer") +
+              " " +
+              (node.group ?? "explorer") +
+              "  " +
               String(node.content?.length ?? 0).padStart(4) +
               "  " +
               name
@@ -259,11 +352,11 @@ export function runCommand(state: ShellState, input: string): RunResult {
           for (const part of p.split("/").filter(Boolean)) {
             current += "/" + part;
             if (fs[current]?.type && fs[current]?.type !== "dir") throw Error(current + ": Not a directory");
-            fs[current] ??= dir();
+            fs[current] ??= newDir();
           }
         } else {
           requireParent(p);
-          fs[p] = dir();
+          fs[p] = newDir();
         }
       }
     } else if (cmd === "touch") {
@@ -272,7 +365,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
       for (const name of args) {
         const p = path(name);
         requireParent(p);
-        fs[p] ??= file("");
+        fs[p] ??= newFile();
       }
     } else if (cmd === "echo") {
       let values = args;
@@ -401,13 +494,42 @@ export function runCommand(state: ShellState, input: string): RunResult {
     } else if (cmd === "chmod") {
       arity(2);
       const n = requireNode(path(args[1]!));
-      if (/^[0-7]{3}$/.test(args[0]!)) n.mode = args[0]!;
-      else if (args[0] === "+x")
-        n.mode = n.mode
-          .split("")
-          .map((d) => String(Number(d) | 1))
-          .join("");
-      else throw Error("chmod: use three octal digits, such as 755, or +x.");
+      n.mode = applyChmod(n.mode, args[0]!);
+    } else if (cmd === "chown") {
+      arity(2);
+      const n = requireNode(path(args[1]!));
+      const spec = args[0]!;
+      if (spec.includes(":")) {
+        const [newOwner, newGroup] = spec.split(":");
+        if (newOwner) {
+          if (!CHOWN_USERS.includes(newOwner)) throw Error("chown: invalid user: '" + newOwner + "'");
+          n.owner = newOwner;
+        }
+        if (newGroup) {
+          if (!CHOWN_GROUPS.includes(newGroup)) throw Error("chown: invalid group: '" + newGroup + "'");
+          n.group = newGroup;
+        }
+      } else {
+        if (!CHOWN_USERS.includes(spec)) throw Error("chown: invalid user: '" + spec + "'");
+        n.owner = spec;
+      }
+    } else if (cmd === "chgrp") {
+      arity(2);
+      const n = requireNode(path(args[1]!));
+      const newGroup = args[0]!;
+      if (!CHOWN_GROUPS.includes(newGroup)) throw Error("chgrp: invalid group: '" + newGroup + "'");
+      n.group = newGroup;
+    } else if (cmd === "umask") {
+      arity(0, 1);
+      if (args.length === 0) {
+        output = "0" + (next.umask ?? DEFAULT_UMASK) + "\n";
+      } else {
+        const spec = args[0]!;
+        if (!/^[0-7]{1,4}$/.test(spec))
+          throw Error("umask: invalid mask. Use up to four octal digits, such as 027.");
+        next.umask = ((parseInt(spec, 8) & 0o777) >>> 0).toString(8).padStart(3, "0");
+      }
+      event.options = [next.umask ?? DEFAULT_UMASK];
     } else if (cmd === "clear") {
       arity(0);
       clear = true;
@@ -426,7 +548,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
       if (fs[redirect.path]?.type === "dir") throw Error(redirect.path + ": Is a directory");
       const before = fs[redirect.path];
       fs[redirect.path] = {
-        ...(before ?? file("")),
+        ...(before ?? newFile()),
         content: (redirect.append ? (before?.content ?? "") : "") + output,
       };
       output = "";

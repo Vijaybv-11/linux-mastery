@@ -9,7 +9,7 @@ import { HeroDemo } from "~/components/home/HeroDemo";
 import { Button } from "~/components/ui/button";
 import { useGame } from "~/contexts/GameContext";
 import { groups, lessons, pad2 } from "~/lib/lessons";
-import { rankFor } from "~/lib/progress";
+import { isUnlocked, rankFor } from "~/lib/progress";
 import { cn } from "~/lib/utils";
 
 const TICKER = ["pwd", "ls -la", "cd ~", "mkdir -p projects", "touch notes.txt", "echo \"hi\" > hello.txt", "cat file", "grep -i maya", "chmod +x run.sh", "find . -name \"*.txt\""];
@@ -114,11 +114,18 @@ export default function HomePage() {
                 <div className="flex flex-wrap gap-2">
                   {g.lessons.map(i => {
                     const isDone = completed.includes(i);
-                    return (
+                    const unlocked = isUnlocked(i, completed);
+                    const tileClass = cn("grid size-12 place-items-center rounded-xl border-2 font-display transition-transform", isDone ? "border-lm-lime-edge bg-lm-lime text-lm-void" : i === nextLesson ? "border-lm-orange-edge bg-lm-orange text-lm-void shadow-[0_4px_0_var(--color-lm-orange-edge)]" : "border-lm-line bg-lm-night text-lm-ink");
+                    return unlocked ? (
                       <Link key={i} href={`/mission/${i + 1}/`} title={`${lessons[i]!.title} · ${lessons[i]!.xp} XP`} aria-label={`Mission ${i + 1}: ${lessons[i]!.title}${isDone ? ", completed" : i === nextLesson ? ", up next" : ""}`}
-                        className={cn("grid size-12 place-items-center rounded-xl border-2 font-display transition-transform hover:-translate-y-0.5", isDone ? "border-lm-lime-edge bg-lm-lime text-lm-void" : i === nextLesson ? "border-lm-orange-edge bg-lm-orange text-lm-void shadow-[0_4px_0_var(--color-lm-orange-edge)]" : "border-lm-line bg-lm-night text-lm-ink")}>
+                        className={cn(tileClass, "hover:-translate-y-0.5")}>
                         {i + 1}
                       </Link>
+                    ) : (
+                      <span key={i} title={`${lessons[i]!.title} — locked until you finish mission ${i}`} aria-label={`Mission ${i + 1}: ${lessons[i]!.title}, locked`} aria-disabled="true"
+                        className={cn(tileClass, "cursor-not-allowed border-lm-line bg-lm-night text-lm-ink-dim opacity-60")}>
+                        <Lock className="size-4" aria-hidden />
+                      </span>
                     );
                   })}
                 </div>
