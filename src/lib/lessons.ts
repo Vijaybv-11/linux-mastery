@@ -389,7 +389,31 @@ export const lessons: Lesson[] = [
       const n = s.fs[HOME + "/server/uploads"];
       return !!n && n.mode.length === 4 && (Number(n.mode[0]) & 1) === 1;
     },
-    success: "Now uploads behaves like /tmp — shared, but safe. You've finished the permissions stage.",
+    success: "Now uploads behaves like /tmp — shared, but safe.",
+  },
+  {
+    scenario: {
+      title: "Set the tone for everything new",
+      setting: "Choosing default permissions before you create files",
+      story:
+        'Maya has one more habit to pass on. "Every file we just fixed by hand — what if new ones started out safe? On this shared box I don\'t want fresh files readable by the whole world." She means the umask: set it once, and everything you create afterward inherits sensible permissions.',
+      useCase:
+        "Set your umask at the start of a session (or in your shell profile) so every file and directory you create lands with safe permissions — no need to chmod each one by hand.",
+    },
+    title: "Default to safe",
+    short: "Set the umask",
+    command: "umask",
+    description: "Instead of fixing each file after the fact, decide once how new files should start.",
+    objective: "Set the umask to 027 so new files are closed to others (new files become 640, new directories 750).",
+    concept:
+      "<code>umask</code> sets the <b>default</b> permissions for things you create next. It's a mask of bits to <i>remove</i> from the base mode — <code>666</code> for files, <code>777</code> for directories. So <code>umask 027</code> removes write from the group (2) and everything from others (7): new files become <code>640</code> and new directories <code>750</code>. Run <code>umask</code> with no argument to see the current mask.",
+    hints: [
+      "The mask is what gets taken away: group write and all of others is 027.",
+      "Run umask 027.",
+    ],
+    xp: 125,
+    check: (s) => s.umask === "027",
+    success: "Set and forget — everything you create now starts safe. That completes the permissions stage.",
   },
 ];
 
@@ -413,7 +437,7 @@ export const groups: LessonGroup[] = [
   {
     title: "Lock it down",
     description: "Read permissions, then set them: who can read, write, run, and own the team's files.",
-    lessons: [10, 11, 12, 13, 14, 15],
+    lessons: [10, 11, 12, 13, 14, 15, 16],
   },
   {
     title: "Pipes & text",

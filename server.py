@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent
 SESSION_TTL = 7 * 24 * 60 * 60
 COOKIE = "linux_mastery_session"
 MAX_BODY = 2 * 1024 * 1024
-LESSON_COUNT = 16
+LESSON_COUNT = 17
 EMPTY_PROGRESS = {"completed": [], "sessions": {}}
 
 
@@ -69,6 +69,8 @@ def validate_progress(value: object) -> dict:
         cwd_node = fs.get(shell["cwd"])
         if not isinstance(cwd_node, dict) or cwd_node.get("type") != "dir":
             raise ValueError("Invalid working directory.")
+        if "umask" in shell and not (isinstance(shell["umask"], str) and re.fullmatch(r"[0-7]{1,4}", shell["umask"])):
+            raise ValueError("Invalid umask.")
         for path, node in fs.items():
             if not isinstance(path, str) or len(path) > 2048 or not isinstance(node, dict) or node.get("type") not in ("dir", "file"):
                 raise ValueError("Invalid file.")

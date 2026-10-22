@@ -16,6 +16,8 @@ export type FileSystem = Record<string, FsNode>;
 export interface ShellState {
   cwd: string;
   fs: FileSystem;
+  /** Octal umask (3 digits, e.g. "022") applied to newly created files/dirs. */
+  umask?: string;
 }
 export interface ShellEvent {
   command?: string;
@@ -58,7 +60,7 @@ export function initialState(lesson = -1): ShellState {
   };
   if ([4, 5, 7, 8].includes(lesson)) fs[HOME + "/projects"] = dir();
   if (lesson === 8) fs[HOME + "/projects/draft.txt"] = file("A small command. A new possibility.\n");
-  if ([10, 11, 12, 13, 14, 15].includes(lesson)) {
+  if ([10, 11, 12, 13, 14, 15, 16].includes(lesson)) {
     const S = HOME + "/server";
     fs[S] = { type: "dir", mode: "755" };
     fs[S + "/backup.sh"] = { type: "file", mode: "644", content: '#!/bin/sh\necho "Backing up the project..."\n' };
@@ -91,6 +93,15 @@ export function initialState(lesson = -1): ShellState {
 /** Users and groups the practice shell recognizes for chown/chgrp. */
 export const CHOWN_USERS = ["explorer", "maya", "root", "deploy", "www-data"];
 export const CHOWN_GROUPS = ["explorer", "developers", "deploy", "www-data", "staff"];
+
+/** Standard login-shell default umask. */
+export const DEFAULT_UMASK = "022";
+
+/** Apply an octal umask to a base mode (666 for files, 777 for dirs) → 3-digit octal string. */
+export function umaskMode(base: number, umask = DEFAULT_UMASK): string {
+  const mask = parseInt(umask, 8) & 0o777;
+  return ((base & ~mask) & 0o777).toString(8).padStart(3, "0");
+}
 
 export function resolvePath(value = "~", cwd = HOME): string {
   if (value === "~") value = HOME;
@@ -175,10 +186,10 @@ export function tokenize(input: string): Token[] {
 
 export const commandNames = [
   "pwd", "ls", "cd", "mkdir", "touch", "echo", "cat", "cp", "mv", "rm",
-  "rmdir", "head", "tail", "wc", "grep", "find", "chmod", "chown", "chgrp", "whoami", "clear", "help",
+  "rmdir", "head", "tail", "wc", "grep", "find", "chmod", "chown", "chgrp", "umask", "whoami", "clear", "help",
 ];
 
-const PRINTING = ["echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "find", "help"];
+const PRINTING = ["echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "find", "umask", "help"];
 
 export function permission(mode: string): string {
   const digits = mode.split("").map(Number);
@@ -248,6 +259,8 @@ export function runCommand(state: ShellState, input: string): RunResult {
     const [cmd = "", ...args] = tokens.map((t) => t.value);
     const fs = next.fs;
     const path = (p: string) => resolvePath(p, next.cwd);
+    const newFile = (content = ""): FsNode => ({ type: "file", mode: umaskMode(0o666, next.umask), content });
+    const newDir = (): FsNode => ({ type: "dir", mode: umaskMode(0o777, next.umask) });
     const requireNode = (p: string): FsNode => {
       const n = fs[p];
       if (!n) throw Error(p + ": No such file or directory");
@@ -339,11 +352,11 @@ export function runCommand(state: ShellState, input: string): RunResult {
           for (const part of p.split("/").filter(Boolean)) {
             current += "/" + part;
             if (fs[current]?.type && fs[current]?.type !== "dir") throw Error(current + ": Not a directory");
-            fs[current] ??= dir();
+            fs[current] ??= newDir();
           }
         } else {
           requireParent(p);
-          fs[p] = dir();
+          fs[p] = newDir();
         }
       }
     } else if (cmd === "touch") {
@@ -352,7 +365,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
       for (const name of args) {
         const p = path(name);
         requireParent(p);
-        fs[p] ??= file("");
+        fs[p] ??= newFile();
       }
     } else if (cmd === "echo") {
       let values = args;
@@ -506,6 +519,17 @@ export function runCommand(state: ShellState, input: string): RunResult {
       const newGroup = args[0]!;
       if (!CHOWN_GROUPS.includes(newGroup)) throw Error("chgrp: invalid group: '" + newGroup + "'");
       n.group = newGroup;
+    } else if (cmd === "umask") {
+      arity(0, 1);
+      if (args.length === 0) {
+        output = "0" + (next.umask ?? DEFAULT_UMASK) + "\n";
+      } else {
+        const spec = args[0]!;
+        if (!/^[0-7]{1,4}$/.test(spec))
+          throw Error("umask: invalid mask. Use up to four octal digits, such as 027.");
+        next.umask = ((parseInt(spec, 8) & 0o777) >>> 0).toString(8).padStart(3, "0");
+      }
+      event.options = [next.umask ?? DEFAULT_UMASK];
     } else if (cmd === "clear") {
       arity(0);
       clear = true;
@@ -524,7 +548,7 @@ export function runCommand(state: ShellState, input: string): RunResult {
       if (fs[redirect.path]?.type === "dir") throw Error(redirect.path + ": Is a directory");
       const before = fs[redirect.path];
       fs[redirect.path] = {
-        ...(before ?? file("")),
+        ...(before ?? newFile()),
         content: (redirect.append ? (before?.content ?? "") : "") + output,
       };
       output = "";

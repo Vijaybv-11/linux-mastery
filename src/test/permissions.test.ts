@@ -169,3 +169,75 @@ describe("chgrp", () => {
     expect(r.output).toContain("invalid group");
   });
 });
+
+describe("umask", () => {
+  /** Set the mask, then create a file and a dir and return their resulting modes. */
+  const modesAfter = (maskCmd: string) => {
+    let state = initialState();
+    const r = runCommand(state, maskCmd);
+    expect(r.ok, r.output).toBe(true);
+    state = r.state;
+    const touched = runCommand(state, "touch new.txt");
+    expect(touched.ok, touched.output).toBe(true);
+    const made = runCommand(touched.state, "mkdir newdir");
+    expect(made.ok, made.output).toBe(true);
+    return {
+      state: made.state,
+      file: made.state.fs[HOME + "/new.txt"]!.mode,
+      dir: made.state.fs[HOME + "/newdir"]!.mode,
+    };
+  };
+
+  test("default (022) yields 644 files and 755 dirs", () => {
+    // No umask set — the implicit default is 022.
+    const r = modesAfter("umask 022");
+    expect(r.file).toBe("644");
+    expect(r.dir).toBe("755");
+  });
+
+  test("the implicit default with no umask command is also 644/755", () => {
+    const state = initialState();
+    const touched = runCommand(state, "touch a.txt");
+    const made = runCommand(touched.state, "mkdir d");
+    expect(made.state.fs[HOME + "/a.txt"]!.mode).toBe("644");
+    expect(made.state.fs[HOME + "/d"]!.mode).toBe("755");
+  });
+
+  test("umask 077 yields 600 files and 700 dirs", () => {
+    const r = modesAfter("umask 077");
+    expect(r.file).toBe("600");
+    expect(r.dir).toBe("700");
+  });
+
+  test("umask 027 yields 640 files and 750 dirs", () => {
+    const r = modesAfter("umask 027");
+    expect(r.file).toBe("640");
+    expect(r.dir).toBe("750");
+    expect(r.state.umask).toBe("027");
+  });
+
+  test("umask applies to echo-redirected new files too", () => {
+    const set = runCommand(initialState(), "umask 027");
+    const written = runCommand(set.state, 'echo "hi" > fresh.txt');
+    expect(written.ok, written.output).toBe(true);
+    expect(written.state.fs[HOME + "/fresh.txt"]!.mode).toBe("640");
+  });
+
+  test("umask with no argument reports the current mask (4 digits)", () => {
+    expect(runCommand(initialState(), "umask").output).toBe("0022\n");
+    const set = runCommand(initialState(), "umask 027");
+    expect(runCommand(set.state, "umask").output).toBe("0027\n");
+  });
+
+  test("a leading-zero mask (0027) normalizes to 027", () => {
+    const r = runCommand(initialState(), "umask 0027");
+    expect(r.ok).toBe(true);
+    expect(r.state.umask).toBe("027");
+  });
+
+  test("an invalid mask errors", () => {
+    const r = runCommand(initialState(), "umask 8");
+    expect(r.ok).toBe(false);
+    expect(r.output).toContain("invalid mask");
+  });
+});

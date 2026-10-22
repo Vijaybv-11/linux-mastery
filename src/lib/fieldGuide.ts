@@ -50,6 +50,7 @@ export const fieldGuide: GuideGroup[] = [
       ["chmod +t dir", "Sticky bit: only a file's owner can delete it in a shared dir"],
       ["chown user file", "Change a file's owner (user:group sets both)"],
       ["chgrp group file", "Change a file's group"],
+      ["umask [027]", "Show or set default permissions for new files (666/777 minus the mask)"],
     ],
   },
 ];
