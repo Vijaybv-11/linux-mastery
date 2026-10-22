@@ -86,6 +86,15 @@ export function validSession(value: unknown): value is Session {
 
 export const totalXp = (completed: number[]) => completed.reduce((sum, i) => sum + (lessons[i]?.xp ?? 0), 0);
 
+/**
+ * Missions unlock in order: the playground and the first mission are always open,
+ * and every other mission opens only once the one before it is completed.
+ */
+export function isUnlocked(index: number, completed: number[]): boolean {
+  if (index === PLAYGROUND || index <= 0) return true;
+  return completed.includes(index - 1);
+}
+
 export function rankFor(count: number) {
   if (count === lessons.length)
     return { title: "At home in the terminal", description: "A whole new world is waiting at your prompt." };

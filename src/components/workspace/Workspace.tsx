@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, FolderTree, HelpCircle, RotateCcw, Shield } from "lucide-react";
+import { ArrowRight, BookOpen, FolderTree, HelpCircle, Lock, RotateCcw, Shield } from "lucide-react";
 import { gsap } from "gsap";
 import { Button } from "~/components/ui/button";
 import { useGame } from "~/contexts/GameContext";
 import { lessons, pad2 } from "~/lib/lessons";
-import { PLAYGROUND } from "~/lib/progress";
+import { isUnlocked, PLAYGROUND } from "~/lib/progress";
 import { cn } from "~/lib/utils";
 import { FileTree } from "./FileTree";
 import { ProgressBar } from "./ProgressBar";
@@ -19,9 +19,10 @@ import { Terminal } from "./Terminal";
 /** GitMastery level page: header, milestone bar, terminal + Challenge/Filesystem panel. */
 export function Workspace({ index }: { index: number }) {
   const router = useRouter();
-  const { hydrated, getSession, completed, xp, revealHint, storySeen, markStorySeen, resetSession, setGuideOpen, toast } = useGame();
+  const { hydrated, getSession, completed, xp, nextLesson, revealHint, storySeen, markStorySeen, resetSession, setGuideOpen, toast } = useGame();
   const lesson = lessons[index];
   const playground = index === PLAYGROUND;
+  const locked = hydrated && !playground && !!lesson && !isUnlocked(index, completed);
   const session = getSession(index);
   const [tab, setTab] = useState<"challenge" | "files">(playground ? "files" : "challenge");
   const [hintsOpen, setHintsOpen] = useState(false);
@@ -30,8 +31,14 @@ export function Workspace({ index }: { index: number }) {
 
   useEffect(() => { setTab(playground ? "files" : "challenge"); setHintsOpen(false); }, [index, playground]);
   useEffect(() => {
-    if (hydrated && lesson && !storySeen(index)) { markStorySeen(index); setStoryOpen(true); }
-  }, [hydrated, index, lesson, storySeen, markStorySeen]);
+    if (locked) {
+      toast("Finish the mission before this one first.");
+      router.replace(`/mission/${(nextLesson === -1 ? 0 : nextLesson) + 1}/`);
+    }
+  }, [locked, nextLesson, router, toast]);
+  useEffect(() => {
+    if (hydrated && !locked && lesson && !storySeen(index)) { markStorySeen(index); setStoryOpen(true); }
+  }, [hydrated, locked, index, lesson, storySeen, markStorySeen]);
   useEffect(() => {
     if (!root.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
@@ -49,6 +56,17 @@ export function Workspace({ index }: { index: number }) {
   ];
   const ordered = playground ? [...tabs].reverse() : tabs;
 
+  if (locked) {
+    return (
+      <main className="mx-auto grid max-w-md place-items-center gap-4 px-4 py-24 text-center sm:px-6">
+        <span className="grid size-14 place-items-center rounded-2xl border-2 border-lm-line bg-lm-night text-lm-ink-dim"><Lock className="size-6" aria-hidden /></span>
+        <h1 className="font-display text-2xl text-lm-ink">This mission is still locked</h1>
+        <p className="text-lm-ink-muted">Missions open one at a time. Finish the earlier ones first — taking you back to where you left off.</p>
+        <Button asChild><Link href={`/mission/${(nextLesson === -1 ? 0 : nextLesson) + 1}/`}>Go to your next mission <ArrowRight className="size-4" /></Link></Button>
+      </main>
+    );
+  }
+
   return (
     <main ref={root} className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
       <div data-anim="head" className="flex flex-wrap items-end justify-between gap-4">
@@ -65,10 +83,17 @@ export function Workspace({ index }: { index: number }) {
           </div>
         ) : (
           <nav className="flex gap-1.5" aria-label="Missions">
-            {lessons.map((l, i) => (
-              <Link key={i} href={`/mission/${i + 1}/`} title={l.title} aria-label={`Mission ${i + 1}: ${l.title}`} aria-current={i === index ? "step" : undefined}
-                className={cn("size-3 rounded-full border transition-transform hover:scale-125", i === index ? "border-lm-orange bg-lm-orange" : completed.includes(i) ? "border-lm-lime-edge bg-lm-lime" : "border-lm-line bg-lm-deep")} />
-            ))}
+            {lessons.map((l, i) => {
+              const unlocked = isUnlocked(i, completed);
+              const dotClass = cn("size-3 rounded-full border transition-transform", i === index ? "border-lm-orange bg-lm-orange" : completed.includes(i) ? "border-lm-lime-edge bg-lm-lime" : "border-lm-line bg-lm-deep", !unlocked && "opacity-40");
+              return unlocked ? (
+                <Link key={i} href={`/mission/${i + 1}/`} title={l.title} aria-label={`Mission ${i + 1}: ${l.title}`} aria-current={i === index ? "step" : undefined}
+                  className={cn(dotClass, "hover:scale-125")} />
+              ) : (
+                <span key={i} title={`Mission ${i + 1} locked — finish the one before it`} aria-label={`Mission ${i + 1}: ${l.title}, locked`} aria-disabled="true"
+                  className={cn(dotClass, "cursor-not-allowed")} />
+              );
+            })}
           </nav>
         )}
       </div>
