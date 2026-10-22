@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parent
 SESSION_TTL = 7 * 24 * 60 * 60
 COOKIE = "linux_mastery_session"
 MAX_BODY = 2 * 1024 * 1024
+LESSON_COUNT = 16
 EMPTY_PROGRESS = {"completed": [], "sessions": {}}
 
 
@@ -54,9 +55,9 @@ def validate_progress(value: object) -> dict:
     if not isinstance(value, dict):
         raise ValueError("Progress must be an object.")
     completed, sessions = value.get("completed"), value.get("sessions")
-    if not isinstance(completed, list) or len(completed) > 10 or any(type(i) is not int or not 0 <= i < 10 for i in completed):
+    if not isinstance(completed, list) or len(completed) > LESSON_COUNT or any(type(i) is not int or not 0 <= i < LESSON_COUNT for i in completed):
         raise ValueError("Invalid completed missions.")
-    if not isinstance(sessions, dict) or any(k not in [str(i) for i in range(-1, 10)] for k in sessions):
+    if not isinstance(sessions, dict) or any(k not in [str(i) for i in range(-1, LESSON_COUNT)] for k in sessions):
         raise ValueError("Invalid mission workspaces.")
     for session in sessions.values():
         if not isinstance(session, dict) or not isinstance(session.get("shell"), dict):
@@ -71,8 +72,11 @@ def validate_progress(value: object) -> dict:
         for path, node in fs.items():
             if not isinstance(path, str) or len(path) > 2048 or not isinstance(node, dict) or node.get("type") not in ("dir", "file"):
                 raise ValueError("Invalid file.")
-            if not re.fullmatch(r"[0-7]{3}", str(node.get("mode", ""))):
+            if not re.fullmatch(r"[0-7]{3,4}", str(node.get("mode", ""))):
                 raise ValueError("Invalid file permissions.")
+            for field in ("owner", "group"):
+                if field in node and (not isinstance(node[field], str) or len(node[field]) > 32):
+                    raise ValueError("Invalid file ownership.")
             if node["type"] == "file" and (not isinstance(node.get("content"), str) or len(node["content"]) > 200000):
                 raise ValueError("A practice file is too large to save.")
         if not isinstance(session.get("logs"), list) or len(session["logs"]) > 180:

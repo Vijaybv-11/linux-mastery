@@ -259,6 +259,138 @@ export const lessons: Lesson[] = [
     success:
       "You cleared the clutter and completed the beginner path. You’re finding your feet in Linux.",
   },
+  {
+    scenario: {
+      title: "Who can touch what",
+      setting: "Auditing a shared server's files",
+      story:
+        'Maya just gave you access to the team\'s new server. "Before we change anything, let\'s see who can read, write, and run what." The files are in ~/server. Take a proper look.',
+      useCase:
+        'Before changing permissions, read them. ls -l shows a permission string plus the owner and group for every file — the first thing you check when something "won\'t run" or "won\'t open."',
+    },
+    title: "Read the permissions",
+    short: "Read perms",
+    command: "ls -l",
+    description: "Every file carries a little label saying who may read, write, and run it. Let's learn to read it.",
+    objective: "List the files in ~/server with full details.",
+    concept:
+      "<code>ls -l</code> shows a 10-character string like <code>-rwxr-xr--</code>. The first character is the type (<code>-</code> file, <code>d</code> directory). The next nine are three groups of <code>rwx</code> for the <b>owner</b>, the <b>group</b>, and <b>others</b>. A letter means allowed; a <code>-</code> means denied.",
+    hints: ['Add the "long" option to ls.', "From ~/server, run ls -l."],
+    xp: 75,
+    check: (_s, e) => e.command === "ls" && !!e.options?.includes("l") && e.path === HOME + "/server",
+    success: "Now you can read any file's permissions at a glance. That's the foundation for everything in this stage.",
+  },
+  {
+    scenario: {
+      title: "The script that won't run",
+      setting: "Making a program executable",
+      story:
+        '"I wrote a backup script but the server won\'t run it," Maya says, pointing at ~/server/backup.sh. It\'s missing its execute permission. Give the owner the right to run it.',
+      useCase:
+        "A freshly created script has no execute permission. You add it so the file can run as a program instead of only being read as text.",
+    },
+    title: "Make it executable",
+    short: "Make runnable",
+    command: "chmod u+x",
+    description: "A script is just a text file until you give it permission to run.",
+    objective: "Give the owner execute permission on ~/server/backup.sh.",
+    concept:
+      "<code>chmod</code> changes permissions. The <b>symbolic</b> form names a class — <code>u</code> owner, <code>g</code> group, <code>o</code> others, <code>a</code> all — then <code>+</code> to add, <code>-</code> to remove, or <code>=</code> to set exactly, followed by the letters <code>r</code>, <code>w</code>, <code>x</code>. So <code>chmod u+x file</code> adds execute for the owner.",
+    hints: ["Target the owner class (u) and add (+) execute (x).", "Run chmod u+x backup.sh."],
+    xp: 100,
+    check: (s) => {
+      const n = s.fs[HOME + "/server/backup.sh"];
+      return !!n && (Number(n.mode[n.mode.length - 3]) & 1) === 1;
+    },
+    success: "The owner can run it now. chmod u+x is how almost every script becomes a program.",
+  },
+  {
+    scenario: {
+      title: "Secrets in the open",
+      setting: "Restricting a sensitive file",
+      story:
+        'Maya spots ~/server/secrets.env — it holds an API key, and right now anyone can read it. "Owner read and write, the group read-only, everyone else nothing." Set it precisely.',
+      useCase:
+        "Lock down a credentials or config file so only its owner can change it and outsiders can't read it at all. Octal mode sets all three classes at once.",
+    },
+    title: "Lock it down",
+    short: "Octal mode",
+    command: "chmod 640",
+    description: "Sometimes you want to set every permission at once, exactly. That's what octal mode is for.",
+    objective: "Set ~/server/secrets.env to owner read/write, group read, others none (640).",
+    concept:
+      "The <b>octal</b> form sets all three classes with three digits. Each digit adds <code>r</code>=4, <code>w</code>=2, <code>x</code>=1. So owner <code>rw</code>=6, group <code>r</code>=4, others <code>0</code> → <code>chmod 640</code>, which matches <code>rw-r-----</code>.",
+    hints: ["Add the numbers: read 4 + write 2 = 6 for the owner.", "Run chmod 640 secrets.env."],
+    xp: 100,
+    check: (s) => s.fs[HOME + "/server/secrets.env"]?.mode === "640",
+    success: "Exactly rw-r-----. Octal is the fastest way to set a known permission.",
+  },
+  {
+    scenario: {
+      title: "Handing over the keys",
+      setting: "Transferring file ownership",
+      story:
+        'The handover doc ~/server/handover.md belongs to you, but Maya is taking it over. "Make me the owner so I can manage it." Change who owns the file.',
+      useCase:
+        "When a file moves to a new owner — a teammate takes over a service, or you fix a file created by the wrong user — you reassign ownership.",
+    },
+    title: "Hand over ownership",
+    short: "Change owner",
+    command: "chown",
+    description: "Files remember who owns them. Sometimes ownership needs to change hands.",
+    objective: "Make maya the owner of ~/server/handover.md.",
+    concept:
+      "<code>chown user file</code> changes a file's owner, and <code>chown user:group file</code> sets both at once. On a real system, changing another file's owner needs <code>sudo</code> (root); the practice shell lets you do it directly so you can learn the command.",
+    hints: ["The command is chown, then the new owner, then the file.", "Run chown maya handover.md."],
+    xp: 125,
+    check: (s) => s.fs[HOME + "/server/handover.md"]?.owner === "maya",
+    success: "Maya owns it now — note that in the real world this one needs root.",
+  },
+  {
+    scenario: {
+      title: "A folder for the team",
+      setting: "Sharing files with a group",
+      story:
+        'The ~/server/project folder should belong to the whole dev team, not just you. "Set its group to developers so everyone on the team can work in it." Change the group.',
+      useCase:
+        "Put a shared directory under a team's group so every member gets the group's access — the basis of collaborative directories on a server.",
+    },
+    title: "Share with the team",
+    short: "Change group",
+    command: "chgrp",
+    description: "Groups let a whole team share access. Let's hand this folder to the developers.",
+    objective: "Change the group of ~/server/project to developers.",
+    concept:
+      "<code>chgrp group file</code> changes which group a file belongs to; the group's three permission bits then apply to every member of that group. (<code>chown :group file</code> does the same thing.)",
+    hints: ["Use chgrp, then the group name, then the folder.", "Run chgrp developers project."],
+    xp: 125,
+    check: (s) => s.fs[HOME + "/server/project"]?.group === "developers",
+    success: "The whole developers group shares this folder now. That's how teams collaborate on a server.",
+  },
+  {
+    scenario: {
+      title: "The shared drop box",
+      setting: "A directory everyone can add to",
+      story:
+        'Last job: ~/server/uploads is where everyone drops files. "People keep deleting each other\'s uploads," Maya sighs. "Make it so anyone can add files, but only the person who made a file can remove it." That is exactly what the sticky bit does — it\'s how /tmp works.',
+      useCase:
+        "On a world-writable shared directory (like /tmp or an uploads folder), the sticky bit stops users from deleting files they don't own, while still letting everyone add their own.",
+    },
+    title: "The shared drop box",
+    short: "Sticky bit",
+    command: "chmod +t",
+    description: "One special permission makes a shared folder safe for everyone to use.",
+    objective: "Add the sticky bit to ~/server/uploads.",
+    concept:
+      'The <b>sticky bit</b> on a directory means only a file\'s owner (or root) can delete or rename files inside it, even when others can write to the folder. Add it with <code>chmod +t dir</code>, or in octal as a leading digit: <code>chmod 1777 dir</code>. In <code>ls -l</code> it appears as a <code>t</code> in the "others" execute slot: <code>drwxrwxrwt</code>.',
+    hints: ["Symbolic: add (+) the sticky (t) bit. Octal: a leading 1.", "Run chmod +t uploads (or chmod 1777 uploads)."],
+    xp: 150,
+    check: (s) => {
+      const n = s.fs[HOME + "/server/uploads"];
+      return !!n && n.mode.length === 4 && (Number(n.mode[0]) & 1) === 1;
+    },
+    success: "Now uploads behaves like /tmp — shared, but safe. You've finished the permissions stage.",
+  },
 ];
 
 export const MAX_XP = lessons.reduce((sum, l) => sum + l.xp, 0);
@@ -279,8 +411,13 @@ export const groups: LessonGroup[] = [
   { title: "Make it yours", description: "Create folders, make files, and leave your first message.", lessons: [3, 4, 5] },
   { title: "Work with files", description: "Read, copy, rename, and clear a little space.", lessons: [6, 7, 8, 9] },
   {
-    title: "Connect the dots",
-    description: "Pipes, searching, and permissions. Your next chapter is on the way.",
+    title: "Lock it down",
+    description: "Read permissions, then set them: who can read, write, run, and own the team's files.",
+    lessons: [10, 11, 12, 13, 14, 15],
+  },
+  {
+    title: "Pipes & text",
+    description: "Chain commands and reshape text with pipes and filters. Coming next.",
     lessons: [],
     locked: true,
   },
