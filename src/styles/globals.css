@@ -300,15 +300,22 @@
     }
 }
 
-/* Concept copy in lessons is authored as small HTML snippets with <code>. */
-.lm-concept code {
+/* Concept copy in lessons is authored as small HTML snippets with <code>.
+   Render every inline command as an eye-popping lime chip that jumps out of
+   the dark background, matching the CommandChip React component. */
+.lm-cmd-copy code {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-code);
-    font-size: 0.9em;
-    color: var(--color-lm-orange);
-    background: var(--color-lm-deep);
-    border: 1px solid var(--color-lm-line);
-    border-radius: 0.4rem;
-    padding: 0.05rem 0.35rem;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--color-lm-lime);
+    background: var(--color-lm-void);
+    border: 1.5px solid color-mix(in srgb, var(--color-lm-lime) 70%, transparent);
+    border-radius: 0.55rem;
+    padding: 0.05rem 0.45rem;
+    box-shadow: 0 0 10px -2px color-mix(in srgb, var(--color-lm-lime) 60%, transparent);
+    white-space: nowrap;
 }
 
 @layer base {
@@ -317,6 +324,10 @@
     }
     html {
         color-scheme: dark;
+        /* Always reserve the vertical scrollbar gutter so toggling tall/short
+           content (e.g. the Challenge vs Filesystem tab) never changes the
+           available width and reflows the two-column layout. */
+        scrollbar-gutter: stable;
     }
     body {
         background: var(--color-lm-void);
