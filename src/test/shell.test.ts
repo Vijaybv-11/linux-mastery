@@ -63,7 +63,9 @@ describe("practice shell", () => {
       "ls -z",
       "cat missing",
       "echo hi > missing/file",
-      "ls | cat",
+      "ls ; pwd",
+      "ls | nosuchcommand",
+      "echo hi > a.txt | cat",
       "mkdir made missing/child",
       "rm Downloads/old.tmp missing",
     ]) {

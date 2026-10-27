@@ -38,7 +38,7 @@ export function Terminal({ index }: { index: number }) {
       const word = value.split(/\s+/).pop() ?? "";
       const prefix = value.slice(0, value.length - word.length);
       let choices: string[];
-      if (!prefix) choices = commandNames.filter(c => c.startsWith(word));
+      if (!prefix.trim() || /\|\s*$/.test(prefix)) choices = commandNames.filter(c => c.startsWith(word));
       else {
         const slash = word.lastIndexOf("/");
         const parent = slash === -1 ? "." : word.slice(0, slash + 1);
