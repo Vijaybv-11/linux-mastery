@@ -1,5 +1,26 @@
 import { HOME, type ShellEvent, type ShellState } from "./shell";
 
+/** Compare command output loosely: trim each line and collapse runs of spaces (uniq -c pads its counts). */
+const tidy = (text = "") =>
+  text
+    .trim()
+    .split("\n")
+    .map((l) => l.trim().replace(/\s+/g, " "))
+    .join("\n");
+const piped = (e: ShellEvent, ...commands: string[]) =>
+  (e.pipeline?.length ?? 0) > 1 && commands.every((c) => e.pipeline!.includes(c));
+
+const VISITOR_IPS = [
+  "10.0.0.5", "203.0.113.9", "198.51.100.4", "203.0.113.9", "10.0.0.5", "203.0.113.9", "192.0.2.17",
+  "203.0.113.9", "198.51.100.4", "203.0.113.9", "10.0.0.5", "203.0.113.9", "192.0.2.17", "198.51.100.4",
+].join("\n");
+const VISITS_PER_IP = "3 10.0.0.5\n2 192.0.2.17\n3 198.51.100.4\n6 203.0.113.9";
+const ERROR_REPORT = [
+  "3 ERROR db: connection refused",
+  "1 ERROR disk: quota exceeded",
+  "2 ERROR login: too many attempts from 203.0.113.9",
+];
+
 export interface Scenario {
   title: string;
   setting: string;
@@ -415,6 +436,153 @@ export const lessons: Lesson[] = [
     check: (s) => s.umask === "027",
     success: "Set and forget — everything you create now starts safe. That completes the permissions stage.",
   },
+  {
+    scenario: {
+      title: "How busy was the morning?",
+      setting: "Counting lines in a server log",
+      story:
+        'The shared server has felt sluggish since nine o\'clock. "Before we blame anyone, let\'s look at the traffic," Maya says, opening ~/server/logs. Every line of access.log is one request. She wants a single number, not the whole log scrolling past.',
+      useCase:
+        "Logs are long. Piping a file into a counter tells you how many requests, errors, or users there were, without reading every line yourself.",
+    },
+    title: "Your first pipe",
+    short: "First pipe",
+    command: "cat | wc -l",
+    description: "One command's output can become the next command's input. That's what the pipe is for.",
+    objective: "Pipe access.log into wc -l to count how many requests it holds.",
+    concept:
+      "The pipe <code>|</code> connects two commands: everything the left command prints is fed to the right command as its input. <code>cat access.log | wc -l</code> prints the log, and <code>wc -l</code> counts the lines it receives. When <code>wc</code> reads from a pipe, it prints just the number, with no file name.",
+    hints: [
+      "Print the log with cat, then add | and the line-counting command.",
+      "Run cat ~/server/logs/access.log | wc -l.",
+    ],
+    xp: 100,
+    check: (_s, e) => piped(e) && e.pipeline!.at(-1) === "wc" && tidy(e.stdout) === "14",
+    success: "Fourteen requests, counted by two small commands working together. That is the Unix way.",
+  },
+  {
+    scenario: {
+      title: "Knocking on doors that don't exist",
+      setting: "Filtering a log before counting",
+      story:
+        'Fourteen requests is not much. "So why is the server complaining?" Maya scrolls the log and frowns: several requests ended in 404, meaning the page doesn\'t exist. "Count just those."',
+      useCase:
+        "Filter first, count second. grep keeps only the lines you care about (404s, a username, an error code), and wc -l turns them into a number you can watch over time.",
+    },
+    title: "Filter, then count",
+    short: "Filter & count",
+    command: "grep | wc -l",
+    description: "A pipeline can grow: narrow the lines down, then measure what's left.",
+    objective: "Count how many requests in access.log returned 404.",
+    concept:
+      "<code>grep 404 access.log</code> keeps only the lines containing <code>404</code>. Pipe that into <code>wc -l</code> and you get a count instead of a list. Each command does one small job, and the pipe joins them. Add <code>-v</code> to grep to keep the lines that <i>don't</i> match.",
+    hints: [
+      "grep the log for 404, then pipe the result into wc -l.",
+      "Run grep 404 ~/server/logs/access.log | wc -l.",
+    ],
+    xp: 125,
+    check: (_s, e) => piped(e, "grep") && e.pipeline!.at(-1) === "wc" && tidy(e.stdout) === "5",
+    success: "Five missing pages in fourteen requests. Someone is guessing URLs.",
+  },
+  {
+    scenario: {
+      title: "Who was knocking?",
+      setting: "Extracting one column from structured text",
+      story:
+        '"Someone is probing for /wp-login.php and /.env," Maya says. "Those aren\'t our pages." Each log line starts with the visitor\'s IP address, followed by a space. Pull out just that first column so you can see who is visiting.',
+      useCase:
+        "Logs, CSV exports, and /etc/passwd are made of fields split by a delimiter. cut extracts the columns you need, ready to sort or count.",
+    },
+    title: "Slice out a column",
+    short: "Cut a column",
+    command: "cut -d -f",
+    description: "Text with a consistent shape can be sliced like a table.",
+    objective: "Print only the IP address (the first space-separated field) of every line in access.log.",
+    concept:
+      '<code>cut</code> splits each line on a delimiter and keeps the fields you ask for. <code>-d " "</code> sets the delimiter to a space (quoted, so the shell keeps it), and <code>-f 1</code> keeps field 1. You can ask for several fields with <code>-f 1,3</code> or a range with <code>-f 2-4</code>.',
+    hints: [
+      'Use cut with a space as the delimiter (-d " ") and field 1 (-f 1).',
+      'Run cut -d " " -f 1 ~/server/logs/access.log.',
+    ],
+    xp: 125,
+    check: (_s, e) => !!e.pipeline?.includes("cut") && tidy(e.stdout) === VISITOR_IPS,
+    success: "A clean list of visitors, one per request. Now you can count them.",
+  },
+  {
+    scenario: {
+      title: "Count every visitor",
+      setting: "Tallying repeated values",
+      story:
+        'The list of IPs is long and repetitive. "Give me one line per visitor with a count next to it," Maya says. "Careful: uniq only notices duplicates that sit next to each other. Line them up first."',
+      useCase:
+        "sort | uniq -c is the classic tally: how many requests per IP, logins per user, or errors per type. It turns a pile of repeated lines into a frequency table.",
+    },
+    title: "Sort and squash",
+    short: "Sort & tally",
+    command: "sort | uniq -c",
+    description: "Group the duplicates together, then collapse each group into one counted line.",
+    objective: "Show how many requests each IP address made, one line per IP with its count.",
+    concept:
+      "<code>uniq</code> collapses <i>adjacent</i> repeated lines into one, and <code>-c</code> prefixes each with how many there were. Because only neighbours are compared, you <code>sort</code> first so identical lines end up together. Try <code>uniq -c</code> without <code>sort</code> to see the difference.",
+    hints: [
+      "Start with your cut command from the last mission, then pipe it through sort and then uniq -c.",
+      'Run cut -d " " -f 1 ~/server/logs/access.log | sort | uniq -c.',
+    ],
+    xp: 150,
+    check: (_s, e) => piped(e, "uniq") && tidy(e.stdout) === VISITS_PER_IP,
+    success: "One line per visitor, with a count. One of those numbers is much bigger than the rest.",
+  },
+  {
+    scenario: {
+      title: "Name the busiest visitor",
+      setting: "Ranking results and keeping the top one",
+      story:
+        '"I don\'t want to read a table during an incident," Maya says. "I want one line: the visitor with the most requests, and how many." Rank the tally from biggest to smallest and keep only the top.',
+      useCase:
+        "Top-N questions come up constantly: the biggest directories, the noisiest IPs, the most frequent errors. sort -rn | head answers all of them.",
+    },
+    title: "Find the top talker",
+    short: "Top talker",
+    command: "sort -rn | head",
+    description: "Put the biggest number first, then keep just the first line.",
+    objective: "Print a single line: the request count and IP of the busiest visitor.",
+    concept:
+      "<code>sort -n</code> sorts by numeric value, so 10 comes after 9 instead of before 2. <code>-r</code> reverses the order, putting the biggest first. Then <code>head -n 1</code> keeps the top line. Five commands, each doing one thing, answer a real question.",
+    hints: [
+      "Take the tally from the last mission and pipe it through sort -rn, then head -n 1.",
+      'Run cut -d " " -f 1 ~/server/logs/access.log | sort | uniq -c | sort -rn | head -n 1.',
+    ],
+    xp: 150,
+    check: (_s, e) => piped(e, "uniq") && tidy(e.stdout) === "6 203.0.113.9",
+    success: "203.0.113.9 made six requests, and most of them probed pages that don't exist. Maya has a name to follow up on.",
+  },
+  {
+    scenario: {
+      title: "Write it up for the team",
+      setting: "Saving a pipeline's output to a file",
+      story:
+        'Last step. The application log, app.log, shows what the server itself complained about. "Summarise the ERROR lines, one per kind with a count, and save it as ~/server/report.txt," Maya says. "The others will read it in the morning."',
+      useCase:
+        "Put > at the end of a pipeline to save its final output as a report, a list for another tool, or a snapshot to compare with tomorrow.",
+    },
+    title: "File the report",
+    short: "Save a report",
+    command: "uniq -c >",
+    description: "Pipes and redirects combine: the last command's output can go into a file.",
+    objective: "Count each distinct ERROR line in app.log and save the result to ~/server/report.txt.",
+    concept:
+      "A redirect at the end of a pipeline applies to the <b>last</b> command, so <code>grep ERROR app.log | sort | uniq -c > report.txt</code> saves the finished summary and prints nothing. Use <code>>></code> to append to an existing report instead of replacing it.",
+    hints: [
+      "Filter app.log for ERROR, tally the lines with sort and uniq -c, then redirect into the report file.",
+      "Run grep ERROR ~/server/logs/app.log | sort | uniq -c > ~/server/report.txt.",
+    ],
+    xp: 175,
+    check: (s) => {
+      const report = s.fs[HOME + "/server/report.txt"]?.content;
+      return !!report && tidy(report).split("\n").sort().join("\n") === [...ERROR_REPORT].sort().join("\n");
+    },
+    success: "Report filed. You can chain commands, reshape text, and save the result. That completes the pipes stage.",
+  },
 ];
 
 export const MAX_XP = lessons.reduce((sum, l) => sum + l.xp, 0);
@@ -441,9 +609,8 @@ export const groups: LessonGroup[] = [
   },
   {
     title: "Pipes & text",
-    description: "Chain commands and reshape text with pipes and filters. Coming next.",
-    lessons: [],
-    locked: true,
+    description: "Chain commands with pipes and work through a server log with grep, cut, sort, and uniq.",
+    lessons: [17, 18, 19, 20, 21, 22],
   },
 ];
 

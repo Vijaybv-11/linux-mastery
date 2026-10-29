@@ -60,10 +60,10 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 
 |                           |                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------- |
-| 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod` and more |
+| 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod`, pipes (`\|`) with `grep`, `cut`, `sort`, `uniq`, `wc` and more |
 | 🌳 **Live file tree**     | The Filesystem tab redraws the virtual filesystem after every command                |
 | 📖 **Maya's story**       | Every mission opens with a story briefing and a real-world use case                   |
-| 🎯 **Structured path**    | Seventeen missions across four stages: *Find your way*, *Make it yours*, *Work with files*, *Lock it down* — with more on the way |
+| 🎯 **Structured path**    | Twenty-three missions across five stages: *Find your way*, *Make it yours*, *Work with files*, *Lock it down*, *Pipes & text* — with more on the way |
 | ✅ **Challenge panel**    | Objective checklist, step-by-step hints and a concept explainer for each mission      |
 | 🎮 **Playground**         | A free sandbox with no goals                                                          |
 | 📚 **Field Guide**        | A searchable cheat sheet of every supported command                                   |
@@ -75,9 +75,9 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 
 ## 🗺️ Roadmap
 
-Linux Mastery is in its **Beginner** chapter today — seventeen missions across four stages. Up next:
-a **Pipes & text** stage, **Beginner/Intermediate/Advanced** difficulty tiers, **concept
-visualization cards**, and **live hosting**.
+Linux Mastery has twenty-three missions across five stages today, most recently **Pipes & text**.
+Up next: **Beginner/Intermediate/Advanced** difficulty tiers, **concept visualization cards**, and
+**live hosting**.
 
 See the full plan in **[ROADMAP.md](./ROADMAP.md)**.
 
@@ -144,7 +144,7 @@ src/
 ├── app/                        # Next.js App Router
 │   ├── layout.tsx              # Fonts, providers, Navbar/Footer, global dialogs
 │   ├── page.tsx                # Home: hero, ticker, player HUD, journey path (GSAP)
-│   ├── mission/[id]/page.tsx   # Statically generated mission pages (1–17)
+│   ├── mission/[id]/page.tsx   # Statically generated mission pages (1–23)
 │   ├── playground/page.tsx     # Free-play shell
 │   └── not-found.tsx           # Terminal-style 404
 ├── components/
@@ -165,7 +165,8 @@ src/
 │   ├── fieldGuide.ts           # Field Guide content
 │   └── utils.ts                # cn() helper
 ├── styles/globals.css          # Tailwind v4 theme tokens + utilities
-└── test/                       # Vitest suites
+└── test/                       # Vitest suites (gnu-parity.test.ts diffs text commands against GNU coreutils)
+docs/                           # Per-stage notes on why each mission matches real Linux behaviour
 server.py                       # Static server + local account API
 tests/test_server.py            # Account API integration tests
 ```
@@ -208,7 +209,8 @@ UI components should stay consistent with the existing Radix primitives in `src/
 
 The terminal is an educational simulation, not an operating system. The supported syntax is listed in
 the in-app Field Guide. Each mission has its own workspace, and resetting a mission keeps the XP you
-earned. Pipes, processes, services and networking are outside this first chapter.
+earned. Pipes work, but other shell syntax (`;`, `&&`, `<`, `2>`) and processes, services and networking
+are outside the current chapter.
 
 ---
 

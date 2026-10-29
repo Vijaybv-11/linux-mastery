@@ -43,7 +43,7 @@ export default function HomePage() {
           <h1 className="font-display text-5xl leading-[1.05] text-lm-ink sm:text-6xl">
             Learn the terminal. <span className="inline-block -rotate-2 rounded-xl border-2 border-lm-orange-edge bg-lm-orange px-3 text-lm-void">Play</span> your way in.
           </h1>
-          <p className="max-w-xl text-lg text-lm-ink-muted">Ten bite-sized missions in a safe practice shell. Help Maya through your first Linux shift, one small command at a time.</p>
+          <p className="max-w-xl text-lg text-lm-ink-muted">{lessons.length} bite-sized missions in a safe practice shell. Help Maya through her Linux shifts, one small command at a time.</p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild><Link href={startHref}>{completed.length === lessons.length ? "Play again" : completed.length ? "Continue playing" : "Start playing"} <ArrowUpRight className="size-5" /></Link></Button>
             <Button size="lg" variant="secondary" onClick={() => setGuideOpen(true)}><BookOpen className="size-5" />Field guide</Button>
