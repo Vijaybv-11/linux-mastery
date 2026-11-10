@@ -60,7 +60,7 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 
 |                           |                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------- |
-| 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod`, pipes (`\|`) with `grep`, `cut`, `sort`, `uniq`, `wc` and more |
+| 🖥️ **Simulated shell**    | `pwd`, `ls`, `cd`, `mkdir`, `touch`, `cat`, `echo` with `>`/`>>`, `cp`, `mv`, `rm`, `chmod`, pipes (`\|`) with `grep`, `cut`, `sort`, `uniq`, `tr`, `wc` and more |
 | 🌳 **Live file tree**     | The Filesystem tab redraws the virtual filesystem after every command                |
 | 📖 **Maya's story**       | Every mission opens with a story briefing and a real-world use case                   |
 | 🎯 **Structured path**    | Twenty-three missions across five stages: *Find your way*, *Make it yours*, *Work with files*, *Lock it down*, *Pipes & text* — with more on the way |

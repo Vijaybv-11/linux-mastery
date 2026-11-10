@@ -241,11 +241,11 @@ export function tokenize(input: string): Token[] {
 
 export const commandNames = [
   "pwd", "ls", "cd", "mkdir", "touch", "echo", "cat", "cp", "mv", "rm", "rmdir", "head", "tail", "wc", "grep",
-  "sort", "uniq", "cut", "find", "chmod", "chown", "chgrp", "umask", "whoami", "clear", "help",
+  "sort", "uniq", "cut", "tr", "find", "chmod", "chown", "chgrp", "umask", "whoami", "clear", "help",
 ];
 
 const PRINTING = [
-  "echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "sort", "uniq", "cut", "find", "umask", "help",
+  "echo", "cat", "pwd", "ls", "whoami", "head", "tail", "wc", "grep", "sort", "uniq", "cut", "tr", "find", "umask", "help",
 ];
 
 /** Split text into lines, dropping the final newline ("" has no lines). */
@@ -299,6 +299,58 @@ function fieldSelector(list: string): (n: number) => boolean {
   });
   if (ranges.some(([lo]) => lo < 1)) throw Error("cut: fields are numbered from 1");
   return (n) => ranges.some(([lo, hi]) => n >= lo && n <= hi);
+}
+
+/** POSIX character classes for tr, as they expand in the C locale. */
+const TR_CLASSES: Record<string, string> = (() => {
+  const range = (a: string, b: string) =>
+    Array.from({ length: b.charCodeAt(0) - a.charCodeAt(0) + 1 }, (_, i) => String.fromCharCode(a.charCodeAt(0) + i)).join("");
+  const lower = range("a", "z");
+  const upper = range("A", "Z");
+  const digit = range("0", "9");
+  const ascii = range(" ", "~");
+  return {
+    lower,
+    upper,
+    digit,
+    alpha: upper + lower,
+    alnum: digit + upper + lower,
+    space: "\t\n\v\f\r ",
+    blank: "\t ",
+    punct: ascii.replace(/[a-zA-Z0-9 ]/g, ""),
+  };
+})();
+
+const TR_ESCAPES: Record<string, string> = { n: "\n", t: "\t", r: "\r", f: "\f", v: "\v", "\\": "\\" };
+
+/** Expand a tr SET such as a-z, [:upper:], or '\n' into its list of characters, in order. */
+function expandTrSet(set: string, second: boolean): string[] {
+  const chars: string[] = [];
+  for (let i = 0; i < set.length; i++) {
+    const cls = /^\[:([a-z]+):\]/.exec(set.slice(i));
+    if (cls) {
+      const members = TR_CLASSES[cls[1]!];
+      if (!members) throw Error("tr: invalid character class '" + cls[1] + "'");
+      if (second && cls[1] !== "lower" && cls[1] !== "upper")
+        throw Error("tr: when translating, the only character classes that may appear in string2 are 'upper' and 'lower'");
+      chars.push(...members);
+      i += cls[0].length - 1;
+      continue;
+    }
+    let c = set[i]!;
+    if (c === "\\" && i + 1 < set.length) c = TR_ESCAPES[set[++i]!] ?? set[i]!;
+    // a-z is a range unless the - is the last character of the set.
+    if (set[i + 1] === "-" && i + 2 < set.length) {
+      let end = set[i + 2]!;
+      i += 2;
+      if (end === "\\" && i + 1 < set.length) end = TR_ESCAPES[set[++i]!] ?? set[i]!;
+      if (end < c) throw Error("tr: range-endpoints of '" + c + "-" + end + "' are in reverse collating sequence order");
+      for (let code = c.charCodeAt(0); code <= end.charCodeAt(0); code++) chars.push(String.fromCharCode(code));
+      continue;
+    }
+    chars.push(c);
+  }
+  return chars;
 }
 
 export function permission(mode: string): string {
@@ -700,6 +752,40 @@ function exec(
           : l,
       ),
     );
+  } else if (cmd === "tr") {
+    const usage = "Usage: tr [-d] [-s] SET1 [SET2]  (tr reads only from a pipe, like echo hi | tr a-z A-Z)";
+    let i = 0;
+    let opts = "";
+    for (; i < args.length && /^-[ds]+$/.test(args[i]!); i++) opts += args[i]!.slice(1);
+    if (args[i]?.startsWith("-") && args[i] !== "-") throw Error("tr: supported options are -d and -s.");
+    const sets = args.slice(i);
+    const del = opts.includes("d");
+    const squeeze = opts.includes("s");
+    if (!sets.length) throw Error("tr: missing operand. " + usage);
+    // Like real tr, there is no file operand: text arrives on stdin.
+    const maxSets = del && !squeeze ? 1 : 2;
+    if (sets.length > maxSets)
+      throw Error("tr: extra operand '" + sets[maxSets] + "'. tr doesn't take a file name; pipe text in with |.");
+    if (del && squeeze && sets.length < 2) throw Error("tr: -ds needs two sets: what to delete, then what to squeeze.");
+    if (!del && !squeeze && sets.length < 2) throw Error("tr: missing operand after '" + sets[0] + "'. " + usage);
+    if (stdin === undefined) throw Error("tr: pipe text in with |, like echo hello | tr a-z A-Z");
+    const set1 = expandTrSet(sets[0]!, false);
+    const set2 = sets.length > 1 ? expandTrSet(sets[1]!, !del) : [];
+    let text = [...stdin];
+    if (del) {
+      const drop = new Set(set1);
+      text = text.filter((c) => !drop.has(c));
+    } else if (set2.length) {
+      // GNU tr pads a short SET2 by repeating its last character; a later duplicate in SET1 wins.
+      const map = new Map<string, string>();
+      set1.forEach((c, n) => map.set(c, set2[Math.min(n, set2.length - 1)]!));
+      text = text.map((c) => map.get(c) ?? c);
+    } else if (sets.length > 1) throw Error("tr: when not truncating set1, string2 must be non-empty");
+    if (squeeze) {
+      const squeezeSet = new Set(sets.length > 1 ? set2 : set1);
+      text = text.filter((c, n) => n === 0 || c !== text[n - 1] || !squeezeSet.has(c));
+    }
+    output = text.join("");
   } else if (cmd === "find") {
     const rest = [...args];
     let start = ".";

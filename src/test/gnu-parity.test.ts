@@ -72,6 +72,20 @@ describe.skipIf(!gnu)("parity with GNU coreutils", () => {
     "grep '[^]0-9]' nums.txt",
     "grep -v INFO app.log",
     "grep -iv error app.log",
+    // tr: translate, delete, squeeze
+    "cat app.log | tr a-z A-Z",
+    "cat app.log | tr '[:lower:]' '[:upper:]'",
+    "cut -d ' ' -f 1 access.log | tr . -",
+    "cat access.log | tr -d 0-9 | head -n 3",
+    "head -n 3 access.log | tr -d '\\n'",
+    "cat access.log | tr -s ' ' | head -n 2",
+    "cat access.log | tr ' ' '\\n' | head -n 12",
+    "cat app.log | tr -s 'a-z' | head -n 4",
+    "cat app.log | tr abc xy",
+    "cat app.log | tr -ds 0-9 ' '",
+    "cat app.log | tr '[:punct:]' _",
+    "cat app.log | tr -d '[:space:]'",
+    "cat app.log | tr aa xy",
   ])("%s", (command) => {
     const sim = runCommand(state, command);
     expect(sim.ok, sim.output).toBe(true);
