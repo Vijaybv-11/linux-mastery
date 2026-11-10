@@ -111,6 +111,44 @@ describe("pipes", () => {
     }
   });
 
+  test("tr translates, deletes, and squeezes characters from a pipe", () => {
+    expect(out(state, "echo hello | tr a-z A-Z")).toBe("HELLO\n");
+    expect(out(state, "echo Hello | tr '[:upper:]' '[:lower:]'")).toBe("hello\n");
+    expect(out(state, "echo abcdef | tr abc x")).toBe("xxxdef\n"); // short SET2 repeats its last char
+    expect(out(state, "echo aab | tr aa xy")).toBe("yyb\n"); // a later duplicate in SET1 wins
+    expect(out(state, "echo 'a1b2c3' | tr -d 0-9")).toBe("abc\n");
+    expect(out(state, "echo 'a  b   c' | tr -s ' '")).toBe("a b c\n");
+    expect(out(state, "echo 'a,,b' | tr -s , ' '")).toBe("a b\n");
+    expect(out(state, "echo 'a1  b2' | tr -ds 0-9 ' '")).toBe("a b\n");
+    expect(out(state, "head -n 2 access.log | tr -d '\\n' | wc -l")).toBe("0\n");
+    expect(out(state, "echo 'a-b' | tr - _")).toBe("a_b\n");
+    expect(out(state, "echo 'a-b' | tr 'a-' 'x+'")).toBe("x+b\n"); // a trailing - is literal
+  });
+
+  test("tr rejects file operands and bad sets, like real tr", () => {
+    for (const command of [
+      "tr a-z A-Z",
+      "tr a-z A-Z access.log",
+      "cat app.log | tr -d a b",
+      "cat app.log | tr a",
+      "cat app.log | tr a ''",
+      "cat app.log | tr z-a A-Z",
+      "cat app.log | tr a-z '[:digit:]'",
+      "cat app.log | tr '[:nope:]' x",
+      "cat app.log | tr -c a b",
+    ]) {
+      const r = runCommand(state, command);
+      expect(r.ok, command).toBe(false);
+      expect(r.state, command).toEqual(state);
+    }
+  });
+
+  test("tr output can be saved with >", () => {
+    const r = runCommand(state, "grep ERROR app.log | tr a-z A-Z > ../loud.txt");
+    expect(r.ok, r.output).toBe(true);
+    expect(r.state.fs[HOME + "/server/loud.txt"]!.content).toContain("ERROR DB: CONNECTION REFUSED\n");
+  });
+
   test("a quoted pipe character is just text", () => {
     expect(out(state, 'echo "a | b"')).toBe("a | b\n");
     expect(out(state, "grep '|' access.log | wc -l")).toBe("0\n");

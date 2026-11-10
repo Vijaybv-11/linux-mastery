@@ -17,8 +17,9 @@ yours*, *Work with files*, *Lock it down*, *Pipes & text*). This is where the pr
 - **Pipes & text** — Maya's shared server gets busy, and you work through its logs: count requests,
   filter 404s, cut out IP addresses, tally them with `sort | uniq -c`, find the top visitor with
   `sort -rn | head`, and save an error summary with `>`. Output is checked byte-for-byte against GNU
-  coreutils (see [docs/stage3-correctness.md](./docs/stage3-correctness.md)). Still to come for text
-  processing: `<`, `2>`, `2>&1`, `tr`, `sed`, and `awk`.
+  coreutils (see [docs/stage3-correctness.md](./docs/stage3-correctness.md)). `tr` is now available
+  in pipelines (translate, `-d` delete, `-s` squeeze, ranges and `[:lower:]`/`[:upper:]` classes), also
+  checked against GNU coreutils. Still to come for text processing: `<`, `2>`, `2>&1`, `sed`, and `awk`.
 
 - **Difficulty tiers** — GitMastery splits its path into Beginner / Intermediate / Advanced. We're
   in the Beginner tier now; the split lets later tiers assume prior commands and move faster.
