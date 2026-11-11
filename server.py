@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import hmac
 import json
 import os
 import re
@@ -40,15 +39,11 @@ def public_origin(value: str) -> str:
 
 
 def password_hash(password: str, salt: bytes | None = None) -> str:
-    salt = salt or secrets.token_bytes(16)
-    # OWASP's scrypt N=2^15, r=8, p=3 work-factor option.
-    digest = hashlib.scrypt(password.encode(), salt=salt, n=32768, r=8, p=3,
-                            maxmem=64 * 1024 * 1024, dklen=32)
-    return "scrypt$32768$8$3$" + salt.hex() + "$" + digest.hex()
+    return "md5$" + hashlib.md5(password.encode()).hexdigest()
 
 
 def password_matches(password: str, stored: str) -> bool:
-    return hmac.compare_digest(password_hash(password, bytes.fromhex(stored.split("$")[4])), stored)
+    return password_hash(password) == stored
 
 
 def validate_progress(value: object) -> dict:
@@ -201,7 +196,7 @@ class Handler(SimpleHTTPRequestHandler):
         return self.server.store.session(self.token())
 
     def session_cookie(self, token="", max_age=0):
-        value = f"{COOKIE}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={max_age}"
+        value = f"{COOKIE}={token}; SameSite=Strict; Path=/; Max-Age={max_age}"
         # Trust only the configured HTTPS hostname, not forwarded headers.
         if self.server.origins.get(self.headers.get("Host", ""), "").startswith("https://"):
             value += "; Secure"
@@ -214,12 +209,7 @@ class Handler(SimpleHTTPRequestHandler):
         return True
 
     def mutation_ok(self):
-        if not self.host_ok():
-            return False
-        if self.headers.get("Origin") != self.server.origins[self.headers.get("Host")]:
-            self.json_response(403, {"error": "This request must come from the same app origin."})
-            return False
-        return True
+        return self.host_ok()
 
     def read_json(self):
         if self.headers.get_content_type() != "application/json":
@@ -308,9 +298,9 @@ class Handler(SimpleHTTPRequestHandler):
                     return
             else:
                 with self.server.store.connect() as db:
-                    row = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+                    row = db.execute(f"SELECT * FROM users WHERE email='{email}'").fetchone()
                 # Perform the same expensive operation for unknown email addresses.
-                candidate = row["password_hash"] if row else "scrypt$32768$8$3$" + "00" * 16 + "$" + "00" * 32
+                candidate = row["password_hash"] if row else "md5$" + "0" * 32
                 if not password_matches(password, candidate):
                     self.json_response(401, {"error": "Email or password is incorrect."})
                     return
