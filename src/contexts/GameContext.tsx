@@ -1,13 +1,15 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { lessons } from "~/lib/lessons";
+import { isTierId, lessons, type TierId } from "~/lib/lessons";
 import {
   emptyProgress,
+  nextLessonFor,
   newSession,
   readGuestProgress,
   STORAGE_KEY,
   STORY_SEEN_KEY,
+  TIER_KEY,
   totalXp,
   validSession,
   type Progress,
@@ -23,8 +25,11 @@ interface GameContextValue {
   progress: Progress;
   completed: number[];
   xp: number;
-  /** Index of the first unfinished mission, or -1 when the path is complete. */
+  /** Index of the first unfinished mission (in the chosen tier first), or -1 when the path is complete. */
   nextLesson: number;
+  /** The difficulty tier the player picked. */
+  tier: TierId;
+  setTier: (tier: TierId) => void;
   getSession: (index: number) => Session;
   /** Runs one command in a mission (index ≥ 0) or the playground (-1). */
   runInput: (index: number, command: string) => void;
@@ -53,6 +58,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Progress>(emptyProgress);
   const [hydrated, setHydrated] = useState(false);
   const [seen, setSeen] = useState<number[]>([]);
+  const [tier, setTierState] = useState<TierId>("beginner");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -73,6 +79,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     try {
       const value: unknown = JSON.parse(localStorage.getItem(STORY_SEEN_KEY) ?? "null");
       if (Array.isArray(value)) setSeen(value.filter((n): n is number => Number.isInteger(n)));
+    } catch {
+      /* ignore unreadable storage */
+    }
+    try {
+      const saved = localStorage.getItem(TIER_KEY);
+      if (isTierId(saved)) setTierState(saved);
     } catch {
       /* ignore unreadable storage */
     }
@@ -191,6 +203,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     remoteRef.current = saver;
   }, []);
 
+  const setTier = useCallback((next: TierId) => {
+    setTierState(next);
+    try {
+      localStorage.setItem(TIER_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const markStorySeen = useCallback((index: number) => {
     setSeen((prev) => {
       if (prev.includes(index)) return prev;
@@ -211,7 +232,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       progress,
       completed,
       xp: totalXp(completed),
-      nextLesson: lessons.findIndex((_, i) => !completed.includes(i)),
+      nextLesson: nextLessonFor(tier, completed),
+      tier,
+      setTier,
       getSession,
       runInput,
       pushInfo,
@@ -233,7 +256,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setAccountOpen,
     };
   }, [
-    hydrated, progress, getSession, runInput, pushInfo, clearLogs, revealHint, resetSession, resetAll,
+    hydrated, progress, tier, setTier, getSession, runInput, pushInfo, clearLogs, revealHint, resetSession, resetAll,
     replaceProgress, restoreGuest, setRemoteSaver, seen, markStorySeen, toast, toastMessage, celebrationKey,
     guideOpen, accountOpen,
   ]);

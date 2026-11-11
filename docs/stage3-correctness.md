@@ -83,7 +83,8 @@ mission accepts the summary in any line order, so adding `| sort -rn` before the
 - **Errors.** If any command in a pipeline fails (a missing file, an unknown option), the practice
   shell reports the error and undoes the whole line. Bash would print the error and keep running the
   other commands with empty input.
-- **Not yet supported:** `<`, `2>`, `2>&1`, `;`, `&&`, `||`, `tr`, `sed`, `awk`, `grep -E`, and
-  `sort -k`. These are planned for later stages.
+- **Not yet supported:** `<`, `2>`, `2>&1`, `;`, `&&`, `||`, `sed`, `awk`, `grep -E`, and
+  `sort -k`. These are planned for later stages. (`tr` is supported and checked against GNU
+  coreutils in `gnu-parity.test.ts`.)
 - **Quoting.** Inside double quotes a backslash only escapes `$`, `` ` ``, `"`, and `\`, so
   `"GET\|POST"` reaches grep as `GET\|POST`, as in bash.

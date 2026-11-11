@@ -587,10 +587,50 @@ export const lessons: Lesson[] = [
 
 export const MAX_XP = lessons.reduce((sum, l) => sum + l.xp, 0);
 
+export type TierId = "beginner" | "intermediate" | "advanced";
+
+/** A difficulty tier (GitMastery-style): a run of stages that can assume the tiers before it. */
+export interface Tier {
+  id: TierId;
+  label: string;
+  tagline: string;
+  description: string;
+  /** What a player should already know to start here. */
+  assumes: string;
+  /** A tier with no playable missions yet. */
+  comingSoon?: boolean;
+}
+
+export const tiers: Tier[] = [
+  {
+    id: "beginner",
+    label: "Beginner",
+    tagline: "Never opened a terminal",
+    description: "Find your way around, create your first files, and learn to read, copy, move, and remove them.",
+    assumes: "Nothing at all — start here if the prompt is new to you.",
+  },
+  {
+    id: "intermediate",
+    label: "Intermediate",
+    tagline: "Comfortable with the basics",
+    description: "Lock files down with permissions and ownership, then chain commands with pipes to dig through logs.",
+    assumes: "You can already use pwd, ls, cd, mkdir, touch, cat, echo >, cp, mv, and rm.",
+  },
+  {
+    id: "advanced",
+    label: "Advanced",
+    tagline: "Ready to script",
+    description: "Redirect every stream, edit text with sed and awk, and string commands together with ; and &&.",
+    assumes: "Permissions, pipes, and the text filters from Intermediate.",
+    comingSoon: true,
+  },
+];
+
 export interface LessonGroup {
   title: string;
   description: string;
   lessons: number[];
+  tier: TierId;
   locked?: boolean;
 }
 
@@ -599,19 +639,52 @@ export const groups: LessonGroup[] = [
     title: "Find your way",
     description: "Get your bearings. Learn to look around and move with confidence.",
     lessons: [0, 1, 2],
+    tier: "beginner",
   },
-  { title: "Make it yours", description: "Create folders, make files, and leave your first message.", lessons: [3, 4, 5] },
-  { title: "Work with files", description: "Read, copy, rename, and clear a little space.", lessons: [6, 7, 8, 9] },
+  {
+    title: "Make it yours",
+    description: "Create folders, make files, and leave your first message.",
+    lessons: [3, 4, 5],
+    tier: "beginner",
+  },
+  {
+    title: "Work with files",
+    description: "Read, copy, rename, and clear a little space.",
+    lessons: [6, 7, 8, 9],
+    tier: "beginner",
+  },
   {
     title: "Lock it down",
     description: "Read permissions, then set them: who can read, write, run, and own the team's files.",
     lessons: [10, 11, 12, 13, 14, 15, 16],
+    tier: "intermediate",
   },
   {
     title: "Pipes & text",
     description: "Chain commands with pipes and work through a server log with grep, cut, sort, and uniq.",
     lessons: [17, 18, 19, 20, 21, 22],
+    tier: "intermediate",
+  },
+  {
+    title: "Streams & scripts",
+    description: "Coming soon: <, 2>, 2>&1, sed, awk, and chaining commands with ; and &&.",
+    lessons: [],
+    tier: "advanced",
+    locked: true,
   },
 ];
+
+export const tierById = (id: TierId): Tier => tiers.find((t) => t.id === id)!;
+export const isTierId = (value: unknown): value is TierId => tiers.some((t) => t.id === value);
+/** Stage (group) that contains a mission, or undefined for the playground. */
+export const groupOf = (index: number): LessonGroup | undefined => groups.find((g) => g.lessons.includes(index));
+export const tierOf = (index: number): Tier | undefined => {
+  const g = groupOf(index);
+  return g ? tierById(g.tier) : undefined;
+};
+/** Mission indices in a tier, in play order. */
+export const tierLessons = (id: TierId): number[] => groups.filter((g) => g.tier === id).flatMap((g) => g.lessons);
+/** The first mission of a tier (where a player who picks that difficulty starts), or -1 if it has none yet. */
+export const tierEntry = (id: TierId): number => tierLessons(id)[0] ?? -1;
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");

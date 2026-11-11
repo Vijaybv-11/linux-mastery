@@ -64,6 +64,7 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 | 🌳 **Live file tree**     | The Filesystem tab redraws the virtual filesystem after every command                |
 | 📖 **Maya's story**       | Every mission opens with a story briefing and a real-world use case                   |
 | 🎯 **Structured path**    | Twenty-three missions across five stages: *Find your way*, *Make it yours*, *Work with files*, *Lock it down*, *Pipes & text* — with more on the way |
+| 🎚️ **Difficulty tiers**   | Beginner / Intermediate / Advanced, like GitMastery. Pick your tier on the home page, or skip straight to Intermediate if you know the basics |
 | ✅ **Challenge panel**    | Objective checklist, step-by-step hints and a concept explainer for each mission      |
 | 🎮 **Playground**         | A free sandbox with no goals                                                          |
 | 📚 **Field Guide**        | A searchable cheat sheet of every supported command                                   |
@@ -75,9 +76,9 @@ filesystem panel updates as you go, and nothing you break is real. Guest progres
 
 ## 🗺️ Roadmap
 
-Linux Mastery has twenty-three missions across five stages today, most recently **Pipes & text**.
-Up next: **Beginner/Intermediate/Advanced** difficulty tiers, **concept visualization cards**, and
-**live hosting**.
+Linux Mastery has twenty-three missions across five stages today, split into **Beginner** and
+**Intermediate** difficulty tiers. Up next: the **Advanced** tier (*Streams & scripts*), **concept
+visualization cards**, and **live hosting**.
 
 See the full plan in **[ROADMAP.md](./ROADMAP.md)**.
 
@@ -175,7 +176,8 @@ tests/test_server.py            # Account API integration tests
 
 1. Add a `Lesson` to `lessons` in [`src/lib/lessons.ts`](./src/lib/lessons.ts). Give it a `scenario`
    (Maya's story), `objective`, `concept`, two `hints`, `xp`, and a `check(state, event)` function.
-2. Add its index to a stage in `groups`.
+2. Add its index to a stage in `groups`. Each stage has a `tier` (`beginner`, `intermediate` or
+   `advanced`); tiers are defined in `tiers` in the same file.
 3. If it needs a new command, implement it in [`src/lib/shell.ts`](./src/lib/shell.ts) and document
    it in [`src/lib/fieldGuide.ts`](./src/lib/fieldGuide.ts).
 4. Add a test in `src/test/` that the mission starts unsolved and is solved by the intended commands.

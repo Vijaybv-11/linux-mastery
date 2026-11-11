@@ -1,8 +1,10 @@
-import { lessons } from "./lessons";
+import { lessons, tierEntry, tierLessons, tiers, type TierId } from "./lessons";
 import { initialState, type ShellState } from "./shell";
 
 export const STORAGE_KEY = "linux-mastery-v1";
 export const STORY_SEEN_KEY = "linux-mastery-story-seen";
+/** The difficulty tier the player picked on the home page. */
+export const TIER_KEY = "linux-mastery-tier";
 /** Session key used for the free-play playground. */
 export const PLAYGROUND = -1;
 
@@ -89,10 +91,25 @@ export const totalXp = (completed: number[]) => completed.reduce((sum, i) => sum
 /**
  * Missions unlock in order: the playground and the first mission are always open,
  * and every other mission opens only once the one before it is completed.
+ * The first mission of each difficulty tier is also always open, so a player who
+ * already knows the basics can skip straight to Intermediate (like GitMastery).
  */
 export function isUnlocked(index: number, completed: number[]): boolean {
   if (index === PLAYGROUND || index <= 0) return true;
+  if (tiers.some((t) => tierEntry(t.id) === index)) return true;
   return completed.includes(index - 1);
+}
+
+/** First unfinished mission in the chosen tier, falling back to the first unfinished mission overall (-1 when all are done). */
+export function nextLessonFor(tier: TierId, completed: number[]): number {
+  const inTier = tierLessons(tier).find((i) => !completed.includes(i));
+  return inTier ?? lessons.findIndex((_, i) => !completed.includes(i));
+}
+
+/** How many of a tier's missions are finished. */
+export function tierProgress(tier: TierId, completed: number[]) {
+  const all = tierLessons(tier);
+  return { done: all.filter((i) => completed.includes(i)).length, total: all.length };
 }
 
 export function rankFor(count: number) {

@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 import { Button } from "~/components/ui/button";
 import { CommandChip } from "~/components/ui/CommandChip";
 import { useGame } from "~/contexts/GameContext";
-import { lessons, pad2 } from "~/lib/lessons";
+import { groupOf, groups, lessons, pad2, tierOf } from "~/lib/lessons";
 import { isUnlocked, PLAYGROUND } from "~/lib/progress";
 import { cn } from "~/lib/utils";
 import { FileTree } from "./FileTree";
@@ -20,9 +20,13 @@ import { Terminal } from "./Terminal";
 /** GitMastery level page: header, milestone bar, terminal + Challenge/Filesystem panel. */
 export function Workspace({ index }: { index: number }) {
   const router = useRouter();
-  const { hydrated, getSession, completed, xp, nextLesson, revealHint, storySeen, markStorySeen, resetSession, setGuideOpen, toast } = useGame();
+  const { hydrated, getSession, completed, xp, nextLesson, revealHint, storySeen, markStorySeen, resetSession, setGuideOpen, setTier, toast } = useGame();
   const lesson = lessons[index];
   const playground = index === PLAYGROUND;
+  const stage = groupOf(index);
+  const tier = tierOf(index);
+  /** The next tier, when finishing this mission completes the current one. */
+  const nextTier = tier && tierOf(index + 1)?.id !== tier.id ? tierOf(index + 1) : undefined;
   const locked = hydrated && !playground && !!lesson && !isUnlocked(index, completed);
   const session = getSession(index);
   const [tab, setTab] = useState<"challenge" | "files">(playground ? "files" : "challenge");
@@ -73,7 +77,7 @@ export function Workspace({ index }: { index: number }) {
       <div data-anim="head" className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-lm-orange">{lesson ? `MISSION ${pad2(index + 1)} / ${lessons.length}` : "FREE EXPLORATION"}</p>
-          <p className="text-xs tracking-[0.15em] text-lm-ink-dim">{lesson ? "CHAPTER 01 · FIND YOUR FEET" : "NO OBJECTIVES. ALL POSSIBILITY."}</p>
+          <p className="text-xs tracking-[0.15em] text-lm-ink-dim">{lesson && tier && stage ? `${tier.label.toUpperCase()} · STAGE ${pad2(groups.indexOf(stage) + 1)} · ${stage.title.toUpperCase()}` : "NO OBJECTIVES. ALL POSSIBILITY."}</p>
           <h1 className="mt-1 font-display text-3xl text-lm-ink sm:text-4xl">{lesson?.title ?? "Go where curiosity takes you."}</h1>
         </div>
         {playground ? (
@@ -144,8 +148,9 @@ export function Workspace({ index }: { index: number }) {
                   <div className="rounded-xl border-2 border-lm-lime-edge bg-lm-lime/10 p-4">
                     <p className="font-display text-lm-lime">Mission cleared!</p>
                     <p className="text-sm text-lm-ink-soft">{lesson.success}</p>
-                    <Button className="mt-3" size="sm" onClick={() => router.push(index === lessons.length - 1 ? "/" : `/mission/${index + 2}/`)}>
-                      {index === lessons.length - 1 ? "Back to your path" : "Next mission"} <ArrowRight className="size-4" />
+                    {tier && nextTier && <p className="mt-2 text-sm font-semibold text-lm-lime">That's the whole {tier.label} tier. {nextTier.label} missions build on everything you just learned.</p>}
+                    <Button className="mt-3" size="sm" onClick={() => { if (nextTier) setTier(nextTier.id); router.push(index === lessons.length - 1 ? "/" : `/mission/${index + 2}/`); }}>
+                      {index === lessons.length - 1 ? "Back to your path" : nextTier ? `On to ${nextTier.label}` : "Next mission"} <ArrowRight className="size-4" />
                     </Button>
                   </div>
                 )}

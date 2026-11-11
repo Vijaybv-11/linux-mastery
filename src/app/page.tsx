@@ -2,20 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { ArrowUpRight, BookOpen, Check, Lock, TerminalSquare, Trophy, User } from "lucide-react";
+import { ArrowUpRight, BookOpen, Check, Gauge, Lock, Sparkles, TerminalSquare, Trophy, User } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { HeroDemo } from "~/components/home/HeroDemo";
 import { Button } from "~/components/ui/button";
 import { useGame } from "~/contexts/GameContext";
-import { groups, lessons, pad2 } from "~/lib/lessons";
-import { isUnlocked, rankFor } from "~/lib/progress";
+import { groups, lessons, pad2, tierById, tiers } from "~/lib/lessons";
+import { isUnlocked, rankFor, tierProgress } from "~/lib/progress";
 import { cn } from "~/lib/utils";
 
 const TICKER = ["pwd", "ls -la", "cd ~", "mkdir -p projects", "touch notes.txt", "echo \"hi\" > hello.txt", "cat file", "grep -i maya", "chmod +x run.sh", "find . -name \"*.txt\""];
 
 export default function HomePage() {
-  const { completed, xp, nextLesson, setGuideOpen } = useGame();
+  const { completed, xp, nextLesson, tier, setTier, setGuideOpen } = useGame();
+  const activeTier = tierById(tier);
+  const tierStages = groups.map((g, stage) => ({ g, stage })).filter(({ g }) => g.tier === tier);
   const root = useRef<HTMLDivElement>(null);
   const rank = rankFor(completed.length);
   const startHref = `/mission/${(nextLesson === -1 ? 0 : nextLesson) + 1}/`;
@@ -49,7 +51,7 @@ export default function HomePage() {
             <Button size="lg" variant="secondary" onClick={() => setGuideOpen(true)}><BookOpen className="size-5" />Field guide</Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" size="sm" onClick={() => document.getElementById("journey")?.scrollIntoView({ behavior: "smooth" })}>Difficulty <span className="rounded-full bg-lm-grape px-2 text-xs">Beginner</span></Button>
+            <Button variant="ghost" size="sm" onClick={() => document.getElementById("journey")?.scrollIntoView({ behavior: "smooth" })}><Gauge className="size-4" />Difficulty <span className="rounded-full bg-lm-grape px-2 text-xs">{activeTier.label}</span></Button>
             <Button variant="ghost" size="sm" asChild><Link href="/playground/"><TerminalSquare className="size-4" />Playground</Link></Button>
             <Button variant="ghost" size="sm" onClick={() => document.getElementById("player-panel")?.scrollIntoView({ behavior: "smooth" })}><Trophy className="size-4" />Your progress</Button>
           </div>
@@ -88,11 +90,41 @@ export default function HomePage() {
 
       <section id="journey" className="mx-auto max-w-5xl px-4 pb-20 sm:px-6">
         <div data-reveal className="mb-8 flex flex-wrap items-end justify-between gap-3">
-          <div><p className="text-xs font-semibold tracking-[0.25em] text-lm-orange">YOUR PATH</p><h2 className="font-display text-4xl">Chapter 01</h2></div>
+          <div><p className="text-xs font-semibold tracking-[0.25em] text-lm-orange">YOUR PATH</p><h2 className="font-display text-4xl">{activeTier.label} path</h2></div>
           <span className="rounded-full border border-lm-line px-3 py-1 text-sm text-lm-ink-muted">{completed.length} / {lessons.length} complete</span>
         </div>
+        <div role="radiogroup" aria-label="Difficulty" className="mb-10 grid gap-4 md:grid-cols-3">
+          {tiers.map(t => {
+            const p = tierProgress(t.id, completed);
+            const selected = t.id === tier;
+            const cleared = p.total > 0 && p.done === p.total;
+            return (
+              <button key={t.id} type="button" role="radio" aria-checked={selected} disabled={t.comingSoon}
+                onClick={() => setTier(t.id)}
+                className={cn("lm-panel flex flex-col gap-2 rounded-2xl p-5 text-left transition-transform duration-200",
+                  t.comingSoon ? "cursor-not-allowed opacity-60" : "hover:-translate-y-1",
+                  selected && "ring-2 ring-lm-orange")}>
+                <span className="flex items-center justify-between gap-2 text-xs tracking-[0.15em] text-lm-ink-dim uppercase">
+                  {t.tagline}
+                  {t.comingSoon ? <span className="flex items-center gap-1 rounded-full bg-lm-grape px-2 py-0.5 font-bold tracking-normal text-lm-ink normal-case"><Sparkles className="size-3" aria-hidden />Coming soon</span>
+                    : cleared ? <span className="flex items-center gap-1 rounded-full bg-lm-lime px-2 py-0.5 font-bold tracking-normal text-lm-void normal-case"><Check className="size-3" aria-hidden />Cleared</span>
+                    : selected ? <span className="rounded-full bg-lm-orange px-2 py-0.5 font-bold tracking-normal text-lm-void normal-case">Selected</span> : null}
+                </span>
+                <span className="font-display text-2xl text-lm-ink">{t.label}</span>
+                <span className="text-sm text-lm-ink-muted">{t.description}</span>
+                <span className="text-xs text-lm-ink-dim"><b className="text-lm-ink-soft">Assumes:</b> {t.assumes}</span>
+                {!t.comingSoon && (
+                  <>
+                    <span className="mt-auto flex justify-between pt-2 text-xs text-lm-ink-dim"><span>{p.total} missions</span><span>{p.done}/{p.total} done</span></span>
+                    <span className="h-1.5 overflow-hidden rounded-full bg-lm-void" aria-hidden><span className="block h-full bg-lm-lime" style={{ width: `${(p.done / p.total) * 100}%` }} /></span>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
         <div className="relative space-y-5 before:absolute before:top-6 before:bottom-6 before:left-6 before:w-0.5 before:bg-[repeating-linear-gradient(to_bottom,var(--color-lm-line)_0_6px,transparent_6px_12px)]">
-          {groups.map((g, stage) => {
+          {tierStages.map(({ g, stage }) => {
             const done = g.lessons.filter(i => completed.includes(i)).length;
             const current = g.lessons.includes(nextLesson);
             const cleared = !g.locked && done === g.lessons.length;
@@ -112,6 +144,7 @@ export default function HomePage() {
                   {!g.locked && <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-lm-void" role="progressbar" aria-label={`${g.title} completion`} aria-valuemin={0} aria-valuemax={g.lessons.length} aria-valuenow={done}><div className="h-full bg-lm-lime" style={{ width: `${(done / g.lessons.length) * 100}%` }} /></div>}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {g.locked && !g.lessons.length && <span className="rounded-full border border-lm-line px-3 py-1 text-sm text-lm-ink-dim">Missions coming soon</span>}
                   {g.lessons.map(i => {
                     const isDone = completed.includes(i);
                     const unlocked = isUnlocked(i, completed);
@@ -137,7 +170,7 @@ export default function HomePage() {
 
       <section data-reveal className="mx-auto grid max-w-7xl gap-5 px-4 pb-24 sm:px-6 md:grid-cols-3">
         {[
-          { t: "A real-feeling shell", d: "Twenty everyday commands in a safe, resettable sandbox." },
+          { t: "A real-feeling shell", d: "Everyday commands, pipes, and permissions in a safe, resettable sandbox." },
           { t: "A nudge when you need one", d: "Small missions, useful hints, and a field guide right beside you." },
           { t: "A story to follow", d: "Help Maya through her team's first Linux shift, mission by mission." },
         ].map(f => (
